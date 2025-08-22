@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { tasks } from "@/task/constants/tasks";
 import { taskErrorMessage } from "@/task/constants/task-error-message";
+import { Task } from "@/task/types/task";
 
 @Injectable()
 export class TaskService {
@@ -18,5 +19,11 @@ export class TaskService {
         }
 
         return task;
+    }
+
+    create(task: Task) {
+        this.allTasks.push(task);
+
+        return this.allTasks;
     }
 }

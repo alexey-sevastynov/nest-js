@@ -1,8 +1,9 @@
 import { TaskPriorityKey } from "@/task/enums/task-priority-keys";
 import { TaskStatusKey } from "@/task/enums/task-status-keys";
-import { WithId } from "@common/types/with-id";
+import { Task } from "@/task/types/task";
 
-export interface Task extends WithId {
+export class CreateTaskDto implements Task {
+    id: number;
     title: string;
     description: string;
     status: TaskStatusKey;
