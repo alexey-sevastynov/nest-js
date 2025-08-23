@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { TaskService } from "@/task/task.service";
 import { CreateTaskDto } from "@/task/dto/create-task-dto";
 import { UpdateTaskDto } from "@/task/dto/update-task-dto";
@@ -37,5 +37,12 @@ export class TaskController {
         const idAsNumber = parseNumber(id);
 
         return this.taskService.partialUpdate(idAsNumber, dto);
+    }
+
+    @Delete(":id")
+    delete(@Param("id") id: string) {
+        const idAsNumber = parseNumber(id);
+
+        return this.taskService.delete(idAsNumber);
     }
 }
