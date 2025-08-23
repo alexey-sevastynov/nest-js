@@ -7,4 +7,6 @@ export interface Task extends WithId {
     description: string;
     status: TaskStatusKey;
     priority: TaskPriorityKey;
+    isImportant?: boolean;
+    tags?: string[];
 }

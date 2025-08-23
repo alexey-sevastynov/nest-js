@@ -1,3 +1,5 @@
 export const taskErrorMessage = {
-    taskNotFound: "Task not found",
+    notFound: "Task not found",
+    idMustBeUnique: "Task ID must be unique",
+    tagsMustBeUnique: "Tags must be unique",
 };

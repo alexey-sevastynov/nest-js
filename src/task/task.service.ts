@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { tasks } from "@/task/constants/tasks";
 import { taskErrorMessage } from "@/task/constants/task-error-message";
-import { Task } from "@/task/types/task";
 import { UpdateTaskDto } from "@/task/dto/update-task-dto";
+import { CreateTaskDto } from "@/task/dto/create-task-dto";
 
 @Injectable()
 export class TaskService {
@@ -16,13 +16,17 @@ export class TaskService {
         const task = this.allTasks.find((task) => task.id === id);
 
         if (!task) {
-            throw new NotFoundException(taskErrorMessage.taskNotFound);
+            throw new NotFoundException(taskErrorMessage.notFound);
         }
 
         return task;
     }
 
-    create(task: Task) {
+    create(task: CreateTaskDto) {
+        if (!this.isIdUnique(task.id)) {
+            throw new BadRequestException(taskErrorMessage.idMustBeUnique);
+        }
+
         this.allTasks.push(task);
 
         return this.allTasks;
@@ -31,10 +35,7 @@ export class TaskService {
     update(id: number, dto: UpdateTaskDto) {
         const task = this.findById(id);
 
-        task.title = dto.title;
-        task.description = dto.description;
-        task.status = dto.status;
-        task.priority = dto.priority;
+        Object.assign(task, dto);
 
         return task;
     }
@@ -53,5 +54,9 @@ export class TaskService {
         this.allTasks = this.allTasks.filter((item) => item.id !== task.id);
 
         return task;
+    }
+
+    private isIdUnique(id: number) {
+        return !this.allTasks.some((t) => t.id === id);
     }
 }
