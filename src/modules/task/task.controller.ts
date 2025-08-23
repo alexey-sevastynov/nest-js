@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from "@nestjs/common";
-import { TaskService } from "@/task/task.service";
-import { CreateTaskDto } from "@/task/dto/create-task-dto";
-import { UpdateTaskDto } from "@/task/dto/update-task-dto";
-import { parseNumber } from "@common/utils/parse-number";
+import { TaskService } from "@modules/task/task.service";
+import { CreateTaskDto } from "@modules/task/dto/create-task-dto";
+import { UpdateTaskDto } from "@modules/task/dto/update-task-dto";
+import { parseNumber } from "@/common/utils/parse-number";
 
 @Controller("tasks")
 export class TaskController {

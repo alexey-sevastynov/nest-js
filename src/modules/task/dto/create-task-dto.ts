@@ -9,12 +9,12 @@ import {
     IsString,
     Length,
 } from "class-validator";
-import { type TaskPriorityKey, taskPriorityKeys } from "@/task/enums/task-priority-keys";
-import { type TaskStatusKey, taskStatusKeys } from "@/task/enums/task-status-keys";
-import { Task } from "@/task/types/task";
-import { taskValidation } from "@/task/constants/validation";
-import { UniqueArray } from "@common/decorators/unique-array";
-import { taskErrorMessage } from "@/task/constants/task-error-message";
+import { type TaskPriorityKey, taskPriorityKeys } from "@modules/task/enums/task-priority-keys";
+import { type TaskStatusKey, taskStatusKeys } from "@modules/task/enums/task-status-keys";
+import { Task } from "@modules/task/types/task";
+import { taskValidation } from "@modules/task/constants/validation";
+import { UniqueArray } from "@/common/decorators/unique-array";
+import { taskErrorMessage } from "@modules/task/constants/task-error-message";
 
 export class CreateTaskDto implements Task {
     @IsInt()
