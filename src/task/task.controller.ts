@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put } from "@nestjs/common";
 import { TaskService } from "@/task/task.service";
 import { CreateTaskDto } from "@/task/dto/create-task-dto";
+import { UpdateTaskDto } from "@/task/dto/update-task-dto";
+import { parseNumber } from "@common/utils/parse-number";
 
 @Controller("tasks")
 export class TaskController {
@@ -13,11 +15,27 @@ export class TaskController {
 
     @Get(":id")
     findById(@Param("id") id: string) {
-        return this.taskService.findById(Number(id));
+        const idAsNumber = parseNumber(id);
+
+        return this.taskService.findById(idAsNumber);
     }
 
     @Post()
     create(@Body() dto: CreateTaskDto) {
         return this.taskService.create(dto);
+    }
+
+    @Put(":id")
+    update(@Param("id") id: string, @Body() dto: UpdateTaskDto) {
+        const idAsNumber = parseNumber(id);
+
+        return this.taskService.update(idAsNumber, dto);
+    }
+
+    @Patch(":id")
+    partialUpdate(@Param("id") id: string, @Body() dto: Partial<UpdateTaskDto>) {
+        const idAsNumber = parseNumber(id);
+
+        return this.taskService.partialUpdate(idAsNumber, dto);
     }
 }
