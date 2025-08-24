@@ -1,6 +1,6 @@
 import { Task } from "../types/task";
-import { taskStatusKeys } from "../enums/task-status-keys";
-import { taskPriorityKeys } from "../enums/task-priority-keys";
+import { taskStatusKeys } from "../enums/task-status-key";
+import { taskPriorityKeys } from "../enums/task-priority-key";
 
 export const tasks: Task[] = [
     {

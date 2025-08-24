@@ -1,5 +1,5 @@
-import { TaskPriorityKey } from "../enums/task-priority-keys";
-import { TaskStatusKey } from "../enums/task-status-keys";
+import { TaskPriorityKey } from "../enums/task-priority-key";
+import { TaskStatusKey } from "../enums/task-status-key";
 import { WithId } from "../../../common/types/with-id";
 
 export interface Task extends WithId {
