@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { tasks } from "@modules/task/constants/tasks";
-import { taskErrorMessage } from "@modules/task/constants/task-error-message";
-import { UpdateTaskDto } from "@modules/task/dto/update-task-dto";
-import { CreateTaskDto } from "@modules/task/dto/create-task-dto";
+import { tasks } from "./constants/tasks";
+import { taskErrorMessage } from "./constants/task-error-message";
+import { UpdateTaskDto } from "./dto/update-task-dto";
+import { CreateTaskDto } from "./dto/create-task-dto";
 
 @Injectable()
 export class TaskService {
