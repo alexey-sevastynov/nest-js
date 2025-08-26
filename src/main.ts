@@ -1,17 +1,21 @@
-import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
-import { AppModule } from "./app.module";
-import { initializeSwagger } from "./swagger/setup";
-import { isDev } from "./common/utils/infra/environment";
+import express, { Request, Response } from "express";
+import { bootstrap } from "./bootstrap";
 
-async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+const serverPromise = bootstrap();
 
-    app.useGlobalPipes(new ValidationPipe());
+/**
+ * Handler function for serverless deployment on Vercel Production.
+ * It initializes the server if needed and forwards incoming requests
+ * to either the Express server or the NestJS application instance.
+ */
+export default async function handler(req: Request, res: Response) {
+    const server = await serverPromise;
 
-    if (isDev()) initializeSwagger(app);
+    if (typeof server === "function") {
+        server(req, res);
+    } else {
+        const instance = server.getHttpAdapter().getInstance() as express.Express;
 
-    await app.listen(process.env.PORT ?? 3000);
+        instance(req, res);
+    }
 }
-
-bootstrap();

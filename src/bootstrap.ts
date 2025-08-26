@@ -1,0 +1,39 @@
+import { ExpressAdapter } from "@nestjs/platform-express";
+import { INestApplication } from "@nestjs/common";
+import express from "express";
+import { isServerlessMode } from "./common/utils/infra/environment";
+import { getEnv } from "./common/utils/infra/env-functions";
+import { envKeys } from "./common/enums/infra/env-key";
+import { initializeApp } from "./initialize-app";
+
+type AppInstance = express.Express | INestApplication;
+
+export async function bootstrap(): Promise<AppInstance> {
+    if (isServerlessMode()) {
+        const serverlessInstance = await createServerlessInstance();
+
+        return serverlessInstance;
+    }
+
+    const serverInstance = await createServerInstance();
+
+    return serverInstance;
+}
+
+async function createServerlessInstance() {
+    const server = express();
+    const app = await initializeApp(new ExpressAdapter(server));
+
+    await app.init();
+
+    return server;
+}
+
+async function createServerInstance() {
+    const app = await initializeApp();
+    const port = getEnv(envKeys.port) ?? 3000;
+
+    await app.listen(port);
+
+    return app;
+}

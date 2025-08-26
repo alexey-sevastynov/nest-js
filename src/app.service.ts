@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { environments } from "./common/enums/environment";
+import { environments } from "./common/enums/infra/environment";
 import { isProd } from "./common/utils/infra/environment";
 
 @Injectable()

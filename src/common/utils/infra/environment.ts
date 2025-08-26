@@ -1,13 +1,24 @@
-import { environments } from "../../../common/enums/environment";
+import { appModes } from "../../../common/enums/infra/app-mode";
+import { envKeys } from "../../../common/enums/infra/env-key";
+import { environments } from "../../enums/infra/environment";
+import { getEnv } from "./env-functions";
 
 export function isProd() {
-    return process.env.NODE_ENV === environments.prod;
+    return getEnv(envKeys.nodeEnv) === environments.prod;
 }
 
 export function isDev() {
-    return process.env.NODE_ENV === environments.dev;
+    return getEnv(envKeys.nodeEnv) === environments.dev;
 }
 
 export function isTest() {
-    return process.env.NODE_ENV === environments.test;
+    return getEnv(envKeys.nodeEnv) === environments.test;
+}
+
+export function isStandaloneMode() {
+    return getEnv(envKeys.appMode) === appModes.standalone;
+}
+
+export function isServerlessMode() {
+    return getEnv(envKeys.appMode) === appModes.serverless;
 }
