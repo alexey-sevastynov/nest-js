@@ -1,38 +1,21 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-    IsArray,
-    IsBoolean,
-    IsEnum,
-    IsInt,
-    IsNumber,
-    IsOptional,
-    IsPositive,
-    IsString,
-    Length,
-} from "class-validator";
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString, Length } from "class-validator";
 import { type TaskPriorityKey, taskPriorityKeys } from "../enums/task-priority-key";
 import { type TaskStatusKey, taskStatusKeys } from "../enums/task-status-key";
 import { Task } from "../types/task";
 import { taskValidation } from "../constants/validation";
 import { UniqueArray } from "../../../common/decorators/unique-array";
-import { taskErrorMessage } from "../constants/task-error-message";
 import {
     taskDescriptionApiProps,
-    taskIdApiProps,
     taskImportantApiProps,
     taskPriorityApiProps,
     taskStatusApiProps,
     taskTagsApiProps,
     taskTitleApiProps,
 } from "../constants/tasks-api-props";
+import { errorMessages } from "../../../common/constants/error-messages";
 
-export class CreateTaskDto implements Task {
-    @ApiProperty(taskIdApiProps)
-    @IsInt()
-    @IsPositive()
-    @IsNumber()
-    id: number;
-
+export class UpdateTaskDto implements Partial<Task> {
     @ApiProperty(taskTitleApiProps)
     @Length(taskValidation.title.minLength, taskValidation.title.maxLength)
     @IsString()
@@ -59,7 +42,7 @@ export class CreateTaskDto implements Task {
     @ApiProperty(taskTagsApiProps)
     @IsArray()
     @IsString({ each: true })
-    @UniqueArray({ message: taskErrorMessage.tagsMustBeUnique })
+    @UniqueArray({ message: errorMessages.mustBeUnique.replace("{0}", "Tags") })
     @IsOptional()
     tags: string[];
 }

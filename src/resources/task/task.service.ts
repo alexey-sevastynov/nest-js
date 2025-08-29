@@ -1,30 +1,32 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { tasks } from "./constants/tasks";
-import { taskErrorMessage } from "./constants/task-error-message";
 import { UpdateTaskDto } from "./dto/update-task-dto";
 import { CreateTaskDto } from "./dto/create-task-dto";
+import { errorMessages } from "../../common/constants/error-messages";
 
 @Injectable()
 export class TaskService {
     private allTasks = tasks;
 
-    findAll() {
+    findAllTask() {
         return this.allTasks;
     }
 
-    findById(id: number) {
+    findByIdTask(id: number) {
         const task = this.allTasks.find((task) => task.id === id);
 
         if (!task) {
-            throw new NotFoundException(taskErrorMessage.notFound);
+            throw new NotFoundException(
+                errorMessages.notFoundWithId.replace("{0}", "Task").replace("{1}", id.toString()),
+            );
         }
 
         return task;
     }
 
-    create(task: CreateTaskDto) {
+    createTask(task: CreateTaskDto) {
         if (!this.isIdUnique(task.id)) {
-            throw new BadRequestException(taskErrorMessage.idMustBeUnique);
+            throw new BadRequestException(errorMessages.mustBeUnique.replace("{0}", "Task ID"));
         }
 
         this.allTasks.push(task);
@@ -32,24 +34,24 @@ export class TaskService {
         return this.allTasks;
     }
 
-    update(id: number, dto: UpdateTaskDto) {
-        const task = this.findById(id);
+    updateTask(id: number, dto: UpdateTaskDto) {
+        const task = this.findByIdTask(id);
 
         Object.assign(task, dto);
 
         return task;
     }
 
-    partialUpdate(id: number, dto: Partial<UpdateTaskDto>) {
-        const task = this.findById(id);
+    partialUpdateTask(id: number, dto: Partial<UpdateTaskDto>) {
+        const task = this.findByIdTask(id);
 
         Object.assign(task, dto);
 
         return task;
     }
 
-    delete(id: number) {
-        const task = this.findById(id);
+    deleteTask(id: number) {
+        const task = this.findByIdTask(id);
 
         this.allTasks = this.allTasks.filter((item) => item.id !== task.id);
 

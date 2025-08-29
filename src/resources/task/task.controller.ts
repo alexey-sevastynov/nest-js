@@ -10,39 +10,39 @@ export class TaskController {
 
     @Get()
     findAll() {
-        return this.taskService.findAll();
+        return this.taskService.findAllTask();
     }
 
     @Get(":id")
     findById(@Param("id") id: string) {
         const idAsNumber = parseNumber(id);
 
-        return this.taskService.findById(idAsNumber);
+        return this.taskService.findByIdTask(idAsNumber);
     }
 
     @Post()
     create(@Body() dto: CreateTaskDto) {
-        return this.taskService.create(dto);
+        return this.taskService.createTask(dto);
     }
 
     @Put(":id")
     update(@Param("id") id: string, @Body() dto: UpdateTaskDto) {
         const idAsNumber = parseNumber(id);
 
-        return this.taskService.update(idAsNumber, dto);
+        return this.taskService.updateTask(idAsNumber, dto);
     }
 
     @Patch(":id")
     partialUpdate(@Param("id") id: string, @Body() dto: Partial<UpdateTaskDto>) {
         const idAsNumber = parseNumber(id);
 
-        return this.taskService.partialUpdate(idAsNumber, dto);
+        return this.taskService.partialUpdateTask(idAsNumber, dto);
     }
 
     @Delete(":id")
     delete(@Param("id") id: string) {
         const idAsNumber = parseNumber(id);
 
-        return this.taskService.delete(idAsNumber);
+        return this.taskService.deleteTask(idAsNumber);
     }
 }
