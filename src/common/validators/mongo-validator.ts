@@ -18,7 +18,7 @@ export async function validateMongoUniqueForCreate<T, K extends keyof T>(
     errorFieldName: string,
 ) {
     const query = buildQuery(field, value);
-    const existing = await findExisting(model, query);
+    const existing = await findOneByQuery(model, query);
 
     if (existing) {
         throw new ConflictException(errorMessages.mustBeUnique.replace("{0}", errorFieldName));
@@ -33,9 +33,9 @@ export async function validateMongoUniqueForUpdate<T, K extends keyof T>(
     errorFieldName: string,
 ) {
     const query = buildQuery(field, value);
-    const existing = await findExisting(model, query);
+    const existing = await findOneByQuery(model, query);
 
-    if (existing && isDifferentId(existing._id, id)) {
+    if (existing && isDifferentObjectId(existing._id, id)) {
         throw new ConflictException(errorMessages.mustBeUnique.replace("{0}", errorFieldName));
     }
 }
@@ -52,19 +52,33 @@ export async function ensureMongoExists<T>(model: mongoose.Model<T>, id: string,
     return doc;
 }
 
+export async function ensureMongoFindOne<T>(
+    model: mongoose.Model<T>,
+    filter: mongoose.FilterQuery<T>,
+    entityName: string,
+) {
+    const doc = await model.findOne(filter).exec();
+
+    if (!doc) {
+        throw new NotFoundException(errorMessages.notFound.replace("{0}", entityName));
+    }
+
+    return doc;
+}
+
 function buildQuery<T, K extends keyof T>(field: K, value: T[K]) {
     const query: mongoose.FilterQuery<T> = { [field]: value } as mongoose.FilterQuery<T>;
 
     return query;
 }
 
-async function findExisting<T>(model: mongoose.Model<T>, query: mongoose.FilterQuery<T>) {
+async function findOneByQuery<T>(model: mongoose.Model<T>, query: mongoose.FilterQuery<T>) {
     const existing = await model.findOne<T & WithObjectId>(query).exec();
 
     return existing;
 }
 
-function isDifferentId(existingId: mongoose.Types.ObjectId, id: string) {
+function isDifferentObjectId(existingId: mongoose.Types.ObjectId, id: string) {
     const isDifferent = existingId.toString() !== id;
 
     return isDifferent;

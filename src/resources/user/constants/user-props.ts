@@ -8,6 +8,7 @@ export const userProps: Record<keyof User, string> = {
     password: nameOf<User>("password"),
     userRole: nameOf<User>("userRole"),
     userStatus: nameOf<User>("userStatus"),
+    addresses: nameOf<User>("addresses"),
     blockReason: nameOf<User>("blockReason"),
     firstName: nameOf<User>("firstName"),
     lastName: nameOf<User>("lastName"),

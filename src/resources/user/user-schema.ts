@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import { Schema, Prop, SchemaFactory } from "@nestjs/mongoose";
 import { type UserRoleKey, userRoleKeys } from "./enums/user-role-key";
 import { type UserStatusKey, userStatusKeys } from "./enums/user-status-key";
+import { Address } from "../../resources/address/address-schema";
 
 @Schema({ timestamps: true })
 export class User {
@@ -21,6 +23,9 @@ export class User {
 
     @Prop({ required: true, default: userStatusKeys.active, enum: userStatusKeys })
     userStatus: UserStatusKey;
+
+    @Prop({ required: false, type: [{ type: mongoose.Schema.Types.ObjectId, ref: Address.name }] })
+    addresses?: Address[];
 
     @Prop({ required: false })
     blockReason?: string;

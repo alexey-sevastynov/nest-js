@@ -49,4 +49,9 @@ export class UserController {
     delete(@Param("id") id: string) {
         return this.userService.deleteUser(id);
     }
+
+    @Delete()
+    deleteAll() {
+        return this.userService.deleteAllUsers();
+    }
 }
