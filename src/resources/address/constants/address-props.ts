@@ -1,5 +1,5 @@
 import { nameOf } from "../../../common/utils/name-of";
-import { Address } from "../address-schema";
+import type { Address } from "../address-schema";
 
 export const addressProps: Record<keyof Address, string> = {
     userId: nameOf<Address>("userId"),

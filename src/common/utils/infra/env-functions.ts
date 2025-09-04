@@ -1,5 +1,5 @@
-import { ConfigService } from "@nestjs/config";
-import { EnvKey } from "../../enums/infra/env-key";
+import type { ConfigService } from "@nestjs/config";
+import type { EnvKey } from "../../enums/infra/env-key";
 import { errorMessages } from "../../../common/constants/error-messages";
 
 export function getEnv(key: EnvKey, configService?: ConfigService) {

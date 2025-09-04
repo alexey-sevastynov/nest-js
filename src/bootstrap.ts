@@ -1,5 +1,5 @@
 import { ExpressAdapter } from "@nestjs/platform-express";
-import { INestApplication } from "@nestjs/common";
+import type { INestApplication } from "@nestjs/common";
 import express from "express";
 import { isServerlessMode } from "./common/utils/infra/environment";
 import { getEnv } from "./common/utils/infra/env-functions";

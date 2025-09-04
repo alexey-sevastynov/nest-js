@@ -1,4 +1,4 @@
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { envKeys } from "../../common/enums/infra/env-key";
 import { getRequiredEnv } from "../../common/utils/infra/env-functions";
 

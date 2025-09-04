@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { User } from "../user-schema";
-import { CreateUserDto } from "../dto/create-user-dto";
+import type { CreateUserDto } from "../dto/create-user-dto";
 import { userProps } from "../constants/user-props";
 import { validateUuidV4 } from "../../../common/validators/uuid-validator";
 import {
@@ -8,7 +8,7 @@ import {
     validateMongoUniqueForCreate,
     validateMongoUniqueForUpdate,
 } from "../../../common/validators/mongo-validator";
-import { UpdateUserDto } from "../dto/update-user-dto";
+import type { UpdateUserDto } from "../dto/update-user-dto";
 
 export async function validateUserForCreate(model: mongoose.Model<User>, user: CreateUserDto) {
     validateUuidV4(user.userId, userProps.userId);

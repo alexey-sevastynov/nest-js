@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { ConflictException } from "@nestjs/common";
 import { ensureMongoFindOne } from "../../../common/validators/mongo-validator";
 import { addressProps } from "../constants/address-props";
-import { User } from "../../../resources/user/user-schema";
-import { Address } from "../address-schema";
-import { CreateAddressForUserDto } from "../dto/create-address-for-user-dto";
+import type { User } from "../../../resources/user/user-schema";
+import type { Address } from "../address-schema";
+import type { CreateAddressForUserDto } from "../dto/create-address-for-user-dto";
 
 export async function ensureUserExists(userModel: mongoose.Model<User>, userId: string) {
     return ensureMongoFindOne(userModel, { userId }, addressProps.userId);

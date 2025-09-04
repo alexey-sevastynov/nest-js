@@ -1,4 +1,5 @@
-import express, { Request, Response } from "express";
+import type { Request, Response } from "express";
+import type express from "express";
 import { bootstrap } from "./bootstrap";
 
 const serverPromise = bootstrap();

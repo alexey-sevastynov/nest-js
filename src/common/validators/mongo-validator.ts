@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { errorMessages } from "../../common/constants/error-messages";
-import { WithObjectId } from "../../common/types/with-object-id";
+import type { WithObjectId } from "../../common/types/with-object-id";
 
 export function validateMongoId(id: string, entityName: string) {
     const isValidId = mongoose.Types.ObjectId.isValid(id);

@@ -1,5 +1,5 @@
 import { nameOf } from "../../../common/utils/name-of";
-import { User } from "../user-schema";
+import type { User } from "../user-schema";
 
 export const userProps: Record<keyof User, string> = {
     userId: nameOf<User>("userId"),

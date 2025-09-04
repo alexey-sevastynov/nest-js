@@ -1,4 +1,3 @@
-// @ts-check
 import eslint from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import globals from "globals";
@@ -26,9 +25,28 @@ export default tseslint.config(
     },
     {
         rules: {
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-floating-promises": "warn",
-            "@typescript-eslint/no-unsafe-argument": "warn",
+            "@typescript-eslint/no-explicit-any": "error",
+            "@typescript-eslint/no-floating-promises": "error",
+            "@typescript-eslint/no-unsafe-argument": "error",
+            "@typescript-eslint/no-unsafe-assignment": "error",
+            "@typescript-eslint/no-unsafe-return": "error",
+            "@typescript-eslint/no-unsafe-call": "error",
+            "@typescript-eslint/no-unsafe-member-access": "error",
+            "@typescript-eslint/consistent-type-imports": "error",
+            "no-duplicate-imports": "error",
+            "no-duplicate-case": "error",
+            "no-console": "error",
+            "no-debugger": "error",
+            "no-empty": "error",
+            "no-return-await": "error",
+            "no-throw-literal": "error",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
+            ],
         },
     },
 );
