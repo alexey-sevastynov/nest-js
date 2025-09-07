@@ -6,6 +6,7 @@ import { DatabaseModule } from "./infra/database/database.module";
 import { TaskModule } from "./resources/task/task.module";
 import { UserModule } from "./resources/user/user.module";
 import { AddressModule } from "./resources/address/address.module";
+import { AuthModule } from "./resources/auth/auth.module";
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import { AddressModule } from "./resources/address/address.module";
         TaskModule,
         UserModule,
         AddressModule,
+        AuthModule,
     ],
     controllers: [AppController],
     providers: [AppService],

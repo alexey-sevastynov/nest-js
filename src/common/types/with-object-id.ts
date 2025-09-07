@@ -1,5 +1,5 @@
-import { type ObjectId } from "mongoose";
+import type mongoose from "mongoose";
 
 export interface WithObjectId {
-    _id: ObjectId;
+    _id: mongoose.Types.ObjectId;
 }

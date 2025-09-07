@@ -6,6 +6,8 @@ export const envKeys = {
     appMode: "APP_MODE",
     port: "PORT",
     nodeEnv: "NODE_ENV",
+    jwtSecret: "JWT_SECRET",
+    jwtExpiration: "JWT_EXPIRATION",
 } as const;
 
 export type EnvKey = (typeof envKeys)[keyof typeof envKeys];
