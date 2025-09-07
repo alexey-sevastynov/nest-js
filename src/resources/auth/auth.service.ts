@@ -8,6 +8,8 @@ import { createId } from "../../common/utils/id-generator";
 import { userRoleKeys } from "../../resources/user/enums/user-role-key";
 import { userStatusKeys } from "../../resources/user/enums/user-status-key";
 import { SignUpDto } from "./dto/sign-up-dto";
+import { SignInDto } from "./dto/sign-in-dto";
+import { validateUserPassword } from "./validators/auth-validators";
 
 @Injectable()
 export class AuthService {
@@ -34,6 +36,15 @@ export class AuthService {
         const user = await this.userModel.create(newUser);
 
         const token = this.jwtService.sign({ id: user._id });
+
+        return { token };
+    }
+
+    async signIn(auth: SignInDto) {
+        const user = await this.userModel.findOne({ email: auth.email });
+        await validateUserPassword(user, auth.password);
+
+        const token = this.jwtService.sign({ id: user!._id });
 
         return { token };
     }

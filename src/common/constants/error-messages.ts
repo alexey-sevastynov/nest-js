@@ -5,4 +5,6 @@ export const errorMessages = {
     notFoundWithId: `{0} with ID {1} not found.`,
     mustBeUnique: `{0} must be unique.`,
     invalidFormat: `{0} has an invalid format.`,
+    invalidEmail: "Invalid email",
+    invalidPassword: "Invalid password",
 };
