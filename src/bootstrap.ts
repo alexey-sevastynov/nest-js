@@ -1,12 +1,11 @@
 import express from "express";
-import cors from "cors";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import type { INestApplication } from "@nestjs/common";
 import { isServerlessMode } from "./common/utils/infra/environment";
 import { getEnv } from "./common/utils/infra/env-functions";
 import { envKeys } from "./common/enums/infra/env-key";
 import { initializeApp } from "./initialize-app";
-import { corsConfig } from "./config/cors-config";
+import { corsConfig, serverlessCors } from "./config/cors-config";
 
 type AppInstance = express.Express | INestApplication;
 
@@ -24,7 +23,8 @@ export async function bootstrap(): Promise<AppInstance> {
 
 async function createServerlessInstance() {
     const server = express();
-    server.use(cors(corsConfig));
+
+    server.use(serverlessCors);
 
     const app = await initializeApp(new ExpressAdapter(server));
     await app.init();
