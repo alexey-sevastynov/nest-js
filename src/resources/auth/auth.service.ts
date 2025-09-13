@@ -37,7 +37,11 @@ export class AuthService {
 
         const token = this.jwtService.sign({ id: user._id });
 
-        return { token };
+        return {
+            token,
+            userId: user.userId,
+            userName: user.userName,
+        };
     }
 
     async signIn(auth: SignInDto) {
@@ -46,6 +50,10 @@ export class AuthService {
 
         const token = this.jwtService.sign({ id: user!._id });
 
-        return { token };
+        return {
+            token,
+            userId: user!.userId,
+            userName: user!.userName,
+        };
     }
 }
