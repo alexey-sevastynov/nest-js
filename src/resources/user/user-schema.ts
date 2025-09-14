@@ -36,7 +36,7 @@ export class User {
     @Prop({ required: false })
     lastName?: string;
 
-    @Prop({ required: false, unique: true })
+    @Prop({ required: false, unique: true, sparse: true })
     phoneNumber?: string;
 }
 

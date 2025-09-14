@@ -1,6 +1,13 @@
-import { PickType } from "@nestjs/mapped-types";
-import { CreateUserDto } from "../../../resources/user/dto/create-user-dto";
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty } from "class-validator";
+import { emailApiProps, passwordApiProps } from "../constants/auth-api-props";
 
-const signInFields = ["email", "password"] as const;
+export class SignInDto {
+    @ApiProperty(emailApiProps)
+    @IsNotEmpty()
+    email: string;
 
-export class SignInDto extends PickType(CreateUserDto, signInFields) {}
+    @ApiProperty(passwordApiProps)
+    @IsNotEmpty()
+    password: string;
+}
