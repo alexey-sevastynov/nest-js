@@ -7,4 +7,5 @@ export const errorMessages = {
     invalidFormat: `{0} has an invalid format.`,
     invalidEmail: "Invalid email",
     invalidPassword: "Invalid password",
+    fieldMustBeUnique: "{0} must be unique. Value '{1}' is already used.",
 };

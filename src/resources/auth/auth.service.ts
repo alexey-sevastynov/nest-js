@@ -10,6 +10,7 @@ import { userStatusKeys } from "../../resources/user/enums/user-status-key";
 import { SignUpDto } from "./dto/sign-up-dto";
 import { SignInDto } from "./dto/sign-in-dto";
 import { validateUserPassword } from "./validators/auth-validators";
+import { throwIfDuplicateKey } from "../../common/utils/mongo-errors";
 
 @Injectable()
 export class AuthService {
@@ -33,27 +34,28 @@ export class AuthService {
             phoneNumber: auth.phoneNumber,
         };
 
-        const user = await this.userModel.create(newUser);
+        try {
+            const user = await this.userModel.create(newUser);
+            const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName);
 
-        const token = this.jwtService.sign({ id: user._id });
-
-        return {
-            token,
-            userId: user.userId,
-            userName: user.userName,
-        };
+            return authResponse;
+        } catch (error) {
+            throwIfDuplicateKey(error);
+        }
     }
 
     async signIn(auth: SignInDto) {
         const user = await this.userModel.findOne({ email: auth.email });
         await validateUserPassword(user, auth.password);
+        const authResponse = this.#createAuthResponse(user!._id, user!.userId, user!.userName);
 
-        const token = this.jwtService.sign({ id: user!._id });
+        return authResponse;
+    }
 
-        return {
-            token,
-            userId: user!.userId,
-            userName: user!.userName,
-        };
+    #createAuthResponse(mongoId: unknown, userId: string, userName: string) {
+        const token = this.jwtService.sign({ id: mongoId });
+        const response = { token, userId, userName };
+
+        return response;
     }
 }
