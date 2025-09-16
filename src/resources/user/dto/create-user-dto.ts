@@ -18,6 +18,7 @@ import {
     blockReasonApiProps,
     emailApiProps,
     firstNameApiProps,
+    isVerifiedApiProps,
     lastNameApiProps,
     passwordApiProps,
     phoneNumberApiProps,
@@ -64,6 +65,10 @@ export class CreateUserDto extends BaseDto {
     @IsNotEmpty()
     @IsEnum(userStatusKeys)
     userStatus: UserStatusKey;
+
+    @ApiProperty(isVerifiedApiProps)
+    @IsOptional()
+    isVerified: boolean;
 
     @ApiProperty(blockReasonApiProps)
     @IsOptional()

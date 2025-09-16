@@ -14,5 +14,6 @@ import { Address, AddressSchema } from "../../resources/address/address-schema";
     ],
     controllers: [UserController],
     providers: [UserService],
+    exports: [MongooseModule],
 })
 export class UserModule {}

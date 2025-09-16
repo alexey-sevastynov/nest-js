@@ -24,6 +24,9 @@ export class User {
     @Prop({ required: true, default: userStatusKeys.active, enum: userStatusKeys })
     userStatus: UserStatusKey;
 
+    @Prop({ required: true, default: false })
+    isVerified: boolean;
+
     @Prop({ required: false, type: [{ type: mongoose.Schema.Types.ObjectId, ref: Address.name }] })
     addresses?: Address[];
 
