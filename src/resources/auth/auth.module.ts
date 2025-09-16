@@ -8,6 +8,7 @@ import { AuthService } from "./auth.service";
 import { User, UserSchema } from "../../resources/user/user-schema";
 import { getRequiredEnv } from "../../common/utils/infra/env-functions";
 import { envKeys } from "../../common/enums/infra/env-key";
+import { MailVerificationModule } from "../../resources/mail-verification/mail-verification.module";
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { envKeys } from "../../common/enums/infra/env-key";
                 signOptions: { expiresIn: getRequiredEnv(envKeys.jwtExpiration, configService) },
             }),
         }),
+        MailVerificationModule,
     ],
     controllers: [AuthController],
     providers: [AuthService],
