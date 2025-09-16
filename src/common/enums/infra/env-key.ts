@@ -8,6 +8,8 @@ export const envKeys = {
     nodeEnv: "NODE_ENV",
     jwtSecret: "JWT_SECRET",
     jwtExpiration: "JWT_EXPIRATION",
+    resendApiKey: "RESEND_API_KEY",
+    frontendBaseUrl: "FRONTEND_BASE_URL",
 } as const;
 
 export type EnvKey = (typeof envKeys)[keyof typeof envKeys];

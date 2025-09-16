@@ -1,6 +1,9 @@
 import type { ConfigService } from "@nestjs/config";
+import { getDotenvConfig } from "./env-config";
 import type { EnvKey } from "../../enums/infra/env-key";
 import { errorMessages } from "../../../common/constants/error-messages";
+
+getDotenvConfig();
 
 export function getEnv(key: EnvKey, configService?: ConfigService) {
     const value = configService ? configService.get<string>(key) : process.env[key];

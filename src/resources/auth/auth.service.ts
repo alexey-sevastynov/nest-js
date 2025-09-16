@@ -11,12 +11,14 @@ import { SignUpDto } from "./dto/sign-up-dto";
 import { SignInDto } from "./dto/sign-in-dto";
 import { validateUserPassword } from "./validators/auth-validators";
 import { throwIfDuplicateKey } from "../../common/utils/mongo-errors";
+import { MailVerificationService } from "../../resources/mail-verification/mail-verification.service";
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
         private jwtService: JwtService,
+        private mailVerificationService: MailVerificationService,
     ) {}
 
     async signUp(auth: SignUpDto) {
@@ -29,6 +31,7 @@ export class AuthService {
             password: hashedPassword,
             userRole: userRoleKeys.user,
             userStatus: userStatusKeys.active,
+            isVerified: false,
             firstName: auth.firstName,
             lastName: auth.lastName,
             phoneNumber: auth.phoneNumber,
@@ -36,6 +39,9 @@ export class AuthService {
 
         try {
             const user = await this.userModel.create(newUser);
+
+            await this.mailVerificationService.sendVerificationEmail(user.email, user._id);
+
             const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName);
 
             return authResponse;

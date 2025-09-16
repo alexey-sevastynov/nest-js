@@ -51,6 +51,12 @@ export const userStatusApiProps = {
     default: userStatusKeys.active,
 };
 
+export const isVerifiedApiProps = {
+    type: Boolean,
+    required: true,
+    default: false,
+};
+
 export const blockReasonApiProps = {
     type: String,
     required: false,
