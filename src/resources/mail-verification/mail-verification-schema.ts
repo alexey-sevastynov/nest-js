@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { timing } from "../../common/constants/timing";
 import { Document } from "mongoose";
 
 @Schema({ timestamps: true })
@@ -9,7 +10,7 @@ export class MailVerification extends Document {
     @Prop({ required: true })
     token: string;
 
-    @Prop({ default: Date.now, expires: 3600 })
+    @Prop({ default: Date.now, expires: timing.oneHourInSeconds })
     createdAt: Date;
 }
 

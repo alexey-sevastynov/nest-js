@@ -3,6 +3,7 @@ import { Schema, Prop, SchemaFactory } from "@nestjs/mongoose";
 import { type UserRoleKey, userRoleKeys } from "./enums/user-role-key";
 import { type UserStatusKey, userStatusKeys } from "./enums/user-status-key";
 import { Address } from "../../resources/address/address-schema";
+import { timing } from "../../common/constants/timing";
 
 @Schema({ timestamps: true })
 export class User {
@@ -44,3 +45,8 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index(
+    { createdAt: 1 },
+    { expireAfterSeconds: timing.oneHourInSeconds, partialFilterExpression: { isVerified: false } },
+);

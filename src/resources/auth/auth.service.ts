@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import * as bcrypt from "bcryptjs";
@@ -9,9 +9,10 @@ import { userRoleKeys } from "../../resources/user/enums/user-role-key";
 import { userStatusKeys } from "../../resources/user/enums/user-status-key";
 import { SignUpDto } from "./dto/sign-up-dto";
 import { SignInDto } from "./dto/sign-in-dto";
-import { validateUserPassword } from "./validators/auth-validators";
+import { verifyUserCredentials } from "./validators/auth-validators";
 import { throwIfDuplicateKey } from "../../common/utils/mongo-errors";
 import { MailVerificationService } from "../../resources/mail-verification/mail-verification.service";
+import { AuthResponse } from "./types/auth-response";
 
 @Injectable()
 export class AuthService {
@@ -42,7 +43,12 @@ export class AuthService {
 
             await this.mailVerificationService.sendVerificationEmail(user.email, user._id);
 
-            const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName);
+            const authResponse = this.#createAuthResponse(
+                user._id,
+                user.userId,
+                user.userName,
+                user.isVerified,
+            );
 
             return authResponse;
         } catch (error) {
@@ -51,16 +57,21 @@ export class AuthService {
     }
 
     async signIn(auth: SignInDto) {
-        const user = await this.userModel.findOne({ email: auth.email });
-        await validateUserPassword(user, auth.password);
-        const authResponse = this.#createAuthResponse(user!._id, user!.userId, user!.userName);
+        const findOneUser = await this.userModel.findOne({ email: auth.email });
+        const user = await verifyUserCredentials(findOneUser, auth.password);
+
+        if (!user.isVerified) {
+            throw new UnauthorizedException("Please verify your email address before signing in.");
+        }
+
+        const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName, user.isVerified);
 
         return authResponse;
     }
 
-    #createAuthResponse(mongoId: unknown, userId: string, userName: string) {
+    #createAuthResponse(mongoId: unknown, userId: string, userName: string, isVerified = false) {
         const token = this.jwtService.sign({ id: mongoId });
-        const response = { token, userId, userName };
+        const response: AuthResponse = { token, userId, userName, isVerified };
 
         return response;
     }

@@ -2,8 +2,11 @@ import { UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from "bcryptjs";
 import { type User } from "../../../resources/user/user-schema";
 import { errorMessages } from "../../../common/constants/error-messages";
+import { type WithObjectId } from "../../../common/types/with-object-id";
 
-export async function validateUserPassword(user: User | null, password: string) {
+type UserWithObjectId = User & WithObjectId;
+
+export async function verifyUserCredentials(user: UserWithObjectId | null, password: string) {
     if (!user) {
         throw new UnauthorizedException(errorMessages.invalidEmail);
     }
