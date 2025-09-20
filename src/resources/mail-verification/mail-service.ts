@@ -1,6 +1,6 @@
 import { Resend } from "resend";
-import { envKeys } from "common/enums/infra/env-key";
-import { getRequiredEnv } from "common/utils/infra/env-functions";
+import { envKeys } from "../../common/enums/infra/env-key";
+import { getRequiredEnv } from "../../common/utils/infra/env-functions";
 
 interface MailOptions {
     to: string;
