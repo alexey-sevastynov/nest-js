@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import * as bcrypt from "bcryptjs";
@@ -9,14 +9,17 @@ import { userRoleKeys } from "../../resources/user/enums/user-role-key";
 import { userStatusKeys } from "../../resources/user/enums/user-status-key";
 import { SignUpDto } from "./dto/sign-up-dto";
 import { SignInDto } from "./dto/sign-in-dto";
-import { validateUserPassword } from "./validators/auth-validators";
+import { verifyUserCredentials } from "./validators/auth-validators";
 import { throwIfDuplicateKey } from "../../common/utils/mongo-errors";
+import { MailVerificationService } from "../../resources/mail-verification/mail-verification.service";
+import { AuthResponse } from "./types/auth-response";
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectModel(User.name) private readonly userModel: Model<User>,
         private jwtService: JwtService,
+        private mailVerificationService: MailVerificationService,
     ) {}
 
     async signUp(auth: SignUpDto) {
@@ -29,6 +32,7 @@ export class AuthService {
             password: hashedPassword,
             userRole: userRoleKeys.user,
             userStatus: userStatusKeys.active,
+            isVerified: false,
             firstName: auth.firstName,
             lastName: auth.lastName,
             phoneNumber: auth.phoneNumber,
@@ -36,7 +40,15 @@ export class AuthService {
 
         try {
             const user = await this.userModel.create(newUser);
-            const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName);
+
+            await this.mailVerificationService.sendVerificationEmail(user.email, user._id);
+
+            const authResponse = this.#createAuthResponse(
+                user._id,
+                user.userId,
+                user.userName,
+                user.isVerified,
+            );
 
             return authResponse;
         } catch (error) {
@@ -45,16 +57,21 @@ export class AuthService {
     }
 
     async signIn(auth: SignInDto) {
-        const user = await this.userModel.findOne({ email: auth.email });
-        await validateUserPassword(user, auth.password);
-        const authResponse = this.#createAuthResponse(user!._id, user!.userId, user!.userName);
+        const findOneUser = await this.userModel.findOne({ email: auth.email });
+        const user = await verifyUserCredentials(findOneUser, auth.password);
+
+        if (!user.isVerified) {
+            throw new UnauthorizedException("Please verify your email address before signing in.");
+        }
+
+        const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName, user.isVerified);
 
         return authResponse;
     }
 
-    #createAuthResponse(mongoId: unknown, userId: string, userName: string) {
+    #createAuthResponse(mongoId: unknown, userId: string, userName: string, isVerified = false) {
         const token = this.jwtService.sign({ id: mongoId });
-        const response = { token, userId, userName };
+        const response: AuthResponse = { token, userId, userName, isVerified };
 
         return response;
     }
