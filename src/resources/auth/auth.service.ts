@@ -13,6 +13,8 @@ import { verifyUserCredentials } from "./validators/auth-validators";
 import { throwIfDuplicateKey } from "../../common/utils/mongo-errors";
 import { MailVerificationService } from "../../resources/mail-verification/mail-verification.service";
 import { AuthResponse } from "./types/auth-response";
+import { WithObjectId } from "../../common/types/with-object-id";
+import { errorMessages } from "../../common/constants/error-messages";
 
 @Injectable()
 export class AuthService {
@@ -40,8 +42,7 @@ export class AuthService {
 
         try {
             const user = await this.userModel.create(newUser);
-
-            await this.mailVerificationService.sendVerificationEmail(user.email, user._id);
+            await this.#sendVerificationOrFail(user.email, user._id);
 
             const authResponse = this.#createAuthResponse(
                 user._id,
@@ -61,7 +62,7 @@ export class AuthService {
         const user = await verifyUserCredentials(findOneUser, auth.password);
 
         if (!user.isVerified) {
-            throw new UnauthorizedException("Please verify your email address before signing in.");
+            throw new UnauthorizedException(errorMessages.emailNotVerified);
         }
 
         const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName, user.isVerified);
@@ -75,4 +76,14 @@ export class AuthService {
 
         return response;
     }
+
+    #sendVerificationOrFail = async (email: string, userId: WithObjectId) => {
+        try {
+            await this.mailVerificationService.sendVerificationEmail(email, userId);
+        } catch {
+            await this.userModel.findByIdAndDelete(userId);
+
+            throw new UnauthorizedException(errorMessages.unableToSendVerificationEmail);
+        }
+    };
 }

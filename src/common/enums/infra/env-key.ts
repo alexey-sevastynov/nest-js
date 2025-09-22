@@ -9,7 +9,11 @@ export const envKeys = {
     jwtSecret: "JWT_SECRET",
     jwtExpiration: "JWT_EXPIRATION",
     resendApiKey: "RESEND_API_KEY",
+    resendFromEmail: "RESEND_FROM_EMAIL",
     frontendBaseUrl: "FRONTEND_BASE_URL",
+    nodeMailerUser: "NODEMAILER_USER",
+    nodeMailerPassword: "NODEMAILER_PASSWORD",
+    mailProvider: "MAIL_PROVIDER",
 } as const;
 
 export type EnvKey = (typeof envKeys)[keyof typeof envKeys];

@@ -1,6 +1,8 @@
 import { Resend } from "resend";
+import { createTransport } from "nodemailer";
 import { envKeys } from "../../common/enums/infra/env-key";
 import { getRequiredEnv } from "../../common/utils/infra/env-functions";
+import { mailProviders } from "./constants/mail-providers";
 
 interface MailOptions {
     to: string;
@@ -9,8 +11,30 @@ interface MailOptions {
     from?: string;
 }
 
+const nodeMailerUser = getRequiredEnv(envKeys.nodeMailerUser);
+const nodeMailerPassword = getRequiredEnv(envKeys.nodeMailerPassword);
+const resendFromEmail = getRequiredEnv(envKeys.resendFromEmail);
 const resendClient = new Resend(getRequiredEnv(envKeys.resendApiKey));
 
-export async function sendMail({ to, subject, html, from = "onboarding@resend.dev" }: MailOptions) {
+export async function sendMail(options: MailOptions) {
+    const mailProvider = getRequiredEnv(envKeys.mailProvider);
+
+    if (mailProvider === mailProviders.nodemailer) {
+        return sendMailWithNodemailer(options);
+    }
+
+    return sendMailWithResend(options);
+}
+
+async function sendMailWithNodemailer({ to, subject, html, from = nodeMailerUser }: MailOptions) {
+    const transporter = createTransport({
+        service: "gmail",
+        auth: { user: nodeMailerUser, pass: nodeMailerPassword },
+    });
+
+    return transporter.sendMail({ to, subject, html, from });
+}
+
+async function sendMailWithResend({ to, subject, html, from = resendFromEmail }: MailOptions) {
     return resendClient.emails.send({ from, to, subject, html });
 }
