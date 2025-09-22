@@ -9,4 +9,7 @@ export const errorMessages = {
     invalidPassword: "Invalid password",
     fieldMustBeUnique: "{0} must be unique. Value '{1}' is already used.",
     invalidToken: "Invalid token",
+    emailNotVerified: "Please verify your email address before signing in.",
+    unableToSendVerificationEmail:
+        "We couldn't send you a verification email. Please try again later or contact support.",
 };
