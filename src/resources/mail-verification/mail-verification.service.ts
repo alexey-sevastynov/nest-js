@@ -5,7 +5,7 @@ import { createId } from "../../common/utils/id-generator";
 import { MailVerification } from "./mail-verification-schema";
 import { User } from "../../resources/user/user-schema";
 import { WithObjectId } from "../../common/types/with-object-id";
-import { verificationEmailHtml } from "./constants/verification-email-html";
+import { resetPasswordEmailHtml, verificationEmailHtml } from "./constants/verification-email-html";
 import { sendMail } from "./mail-service";
 import { getEnv } from "../../common/utils/infra/env-functions";
 import { envKeys } from "../../common/enums/infra/env-key";
@@ -51,8 +51,7 @@ export class MailVerificationService {
         await sendMail({
             to: userEmail,
             subject: "Reset Your Password",
-            html: `<p>Click the link to reset your password:</p>
-               <a href="${resetLink}">${resetLink}</a>`,
+            html: resetPasswordEmailHtml(resetLink),
         });
     }
 
