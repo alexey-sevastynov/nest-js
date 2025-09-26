@@ -5,7 +5,7 @@ import { createId } from "../../common/utils/id-generator";
 import { MailVerification } from "./mail-verification-schema";
 import { User } from "../../resources/user/user-schema";
 import { WithObjectId } from "../../common/types/with-object-id";
-import { verificationEmailHtml } from "./constants/verification-email-html";
+import { resetPasswordEmailHtml, verificationEmailHtml } from "./constants/verification-email-html";
 import { sendMail } from "./mail-service";
 import { getEnv } from "../../common/utils/infra/env-functions";
 import { envKeys } from "../../common/enums/infra/env-key";
@@ -34,6 +34,25 @@ export class MailVerificationService {
         });
 
         return token;
+    }
+
+    async sendPasswordResetEmail(userEmail: string, token: string, userId?: string) {
+        if (userId) {
+            await this.verificationModel.create({
+                userId,
+                token,
+                type: "password-reset",
+                createdAt: new Date(),
+            });
+        }
+
+        const resetLink = `${getEnv(envKeys.frontendBaseUrl)}/auth/reset-password?token=${token}`;
+
+        await sendMail({
+            to: userEmail,
+            subject: "Reset Your Password",
+            html: resetPasswordEmailHtml(resetLink),
+        });
     }
 
     async confirmToken(token: string) {

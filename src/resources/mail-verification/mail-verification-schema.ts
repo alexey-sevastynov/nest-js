@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { timing } from "../../common/constants/timing";
 import { Document } from "mongoose";
+import { timing } from "../../common/constants/timing";
 
 @Schema({ timestamps: true })
 export class MailVerification extends Document {
