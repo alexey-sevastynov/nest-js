@@ -36,6 +36,26 @@ export class MailVerificationService {
         return token;
     }
 
+    async sendPasswordResetEmail(userEmail: string, token: string, userId?: string) {
+        if (userId) {
+            await this.verificationModel.create({
+                userId,
+                token,
+                type: "password-reset",
+                createdAt: new Date(),
+            });
+        }
+
+        const resetLink = `${getEnv(envKeys.frontendBaseUrl)}/auth/reset-password?token=${token}`;
+
+        await sendMail({
+            to: userEmail,
+            subject: "Reset Your Password",
+            html: `<p>Click the link to reset your password:</p>
+               <a href="${resetLink}">${resetLink}</a>`,
+        });
+    }
+
     async confirmToken(token: string) {
         const record = await this.verificationModel.findOne({ token });
 
