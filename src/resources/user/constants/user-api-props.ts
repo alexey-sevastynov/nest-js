@@ -39,7 +39,7 @@ export const userRoleApiProps = {
     type: String,
     required: true,
     example: userRoleKeys.user,
-    enum: [userRoleKeys.user, userRoleKeys.admin, userRoleKeys.manager],
+    enum: [userRoleKeys.user, userRoleKeys.admin, userRoleKeys.manager, userRoleKeys.guest],
     default: userRoleKeys.user,
 };
 

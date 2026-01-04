@@ -4,8 +4,8 @@ import { Model } from "mongoose";
 import * as bcrypt from "bcryptjs";
 import { JwtService } from "@nestjs/jwt";
 import { User } from "../../resources/user/user-schema";
-import { createId } from "../../common/utils/id-generator";
-import { userRoleKeys } from "../../resources/user/enums/user-role-key";
+import { createId, createMongoId } from "../../common/utils/id-generator";
+import { UserRoleKey, userRoleKeys } from "../../resources/user/enums/user-role-key";
 import { userStatusKeys } from "../../resources/user/enums/user-status-key";
 import { SignUpDto } from "./dto/sign-up-dto";
 import { SignInDto } from "./dto/sign-in-dto";
@@ -49,6 +49,7 @@ export class AuthService {
                 user.userId,
                 user.userName,
                 user.isVerified,
+                user.userRole,
             );
 
             return authResponse;
@@ -65,14 +66,38 @@ export class AuthService {
             throw new UnauthorizedException(errorMessages.emailNotVerified);
         }
 
-        const authResponse = this.#createAuthResponse(user._id, user.userId, user.userName, user.isVerified);
+        const authResponse = this.#createAuthResponse(
+            user._id,
+            user.userId,
+            user.userName,
+            user.isVerified,
+            user.userRole,
+        );
 
         return authResponse;
     }
 
-    #createAuthResponse(mongoId: unknown, userId: string, userName: string, isVerified = false) {
+    signInAsGuest() {
+        const authResponse: AuthResponse = this.#createAuthResponse(
+            createMongoId(),
+            createId(),
+            "Guest",
+            true,
+            userRoleKeys.guest,
+        );
+
+        return authResponse;
+    }
+
+    #createAuthResponse(
+        mongoId: unknown,
+        userId: string,
+        userName: string,
+        isVerified = false,
+        userRole: UserRoleKey,
+    ) {
         const token = this.jwtService.sign({ id: mongoId });
-        const response: AuthResponse = { token, userId, userName, isVerified };
+        const response: AuthResponse = { token, userId, userName, isVerified, userRole };
 
         return response;
     }
