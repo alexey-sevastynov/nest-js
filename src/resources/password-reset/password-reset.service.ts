@@ -36,7 +36,11 @@ export class PasswordResetService {
             await this.mailVerificationService.sendPasswordResetEmail(email, token, userId);
 
             return this.createSuccessResponse("Password reset email sent!");
-        } catch {
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                return this.createFailureResponse(errorMessages.notFound.replace("{0}", User.name));
+            }
+
             return this.createFailureResponse("Failed to send password reset email");
         }
     }

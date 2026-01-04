@@ -16,6 +16,26 @@ const nodeMailerPassword = getRequiredEnv(envKeys.nodeMailerPassword);
 const resendFromEmail = getRequiredEnv(envKeys.resendFromEmail);
 const resendClient = new Resend(getRequiredEnv(envKeys.resendApiKey));
 
+const gmailSmtpConfig = {
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: nodeMailerUser,
+        pass: nodeMailerPassword,
+    },
+} as const;
+
+async function sendMailWithNodemailer({ to, subject, html, from = nodeMailerUser }: MailOptions) {
+    const transporter = createTransport(gmailSmtpConfig);
+
+    return transporter.sendMail({ to, subject, html, from });
+}
+
+async function sendMailWithResend({ to, subject, html, from = resendFromEmail }: MailOptions) {
+    return resendClient.emails.send({ from, to, subject, html });
+}
+
 export async function sendMail(options: MailOptions) {
     const mailProvider = getRequiredEnv(envKeys.mailProvider);
 
@@ -24,17 +44,4 @@ export async function sendMail(options: MailOptions) {
     }
 
     return sendMailWithResend(options);
-}
-
-async function sendMailWithNodemailer({ to, subject, html, from = nodeMailerUser }: MailOptions) {
-    const transporter = createTransport({
-        service: "gmail",
-        auth: { user: nodeMailerUser, pass: nodeMailerPassword },
-    });
-
-    return transporter.sendMail({ to, subject, html, from });
-}
-
-async function sendMailWithResend({ to, subject, html, from = resendFromEmail }: MailOptions) {
-    return resendClient.emails.send({ from, to, subject, html });
 }
