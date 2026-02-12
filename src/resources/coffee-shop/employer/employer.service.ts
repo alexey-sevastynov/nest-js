@@ -4,44 +4,45 @@ import { Model } from "mongoose";
 import { CreateEmployerDto } from "./dto/create-employer-dto";
 import { UpdateEmployerDto } from "./dto/update-employer-dto";
 import { Employer, EmployerDocument } from "./employer-schema";
+import { errorMessages } from "../../../common/constants/error-messages";
 
 @Injectable()
 export class EmployerService {
     constructor(@InjectModel(Employer.name) private readonly employerModel: Model<EmployerDocument>) {}
 
-    findAll() {
+    findAllDailyReport() {
         return this.employerModel.find().exec();
     }
 
-    async findById(id: string) {
+    async findByIdEmployer(id: string) {
         const employer = await this.employerModel.findById(id).exec();
 
-        if (!employer) throw new NotFoundException("Employer not found");
+        if (!employer) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employer.name));
 
         return employer;
     }
 
-    create(dto: CreateEmployerDto) {
+    createEmployer(dto: CreateEmployerDto) {
         const employer = new this.employerModel(dto);
 
         return employer.save();
     }
 
-    async update(id: string, dto: UpdateEmployerDto) {
+    async updateEmployer(id: string, dto: UpdateEmployerDto) {
         const updated = await this.employerModel.findByIdAndUpdate(id, dto, { new: true });
 
-        if (!updated) throw new NotFoundException("Employer not found");
+        if (!updated) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employer.name));
 
         return updated;
     }
 
-    async delete(id: string) {
+    async deleteEmployer(id: string) {
         const deleted = await this.employerModel.findByIdAndDelete(id);
 
-        if (!deleted) throw new NotFoundException("Employer not found");
+        if (!deleted) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employer.name));
     }
 
-    async deleteAll() {
+    async deleteAllEmployers() {
         const result = await this.employerModel.deleteMany();
 
         return { deletedCount: result.deletedCount };

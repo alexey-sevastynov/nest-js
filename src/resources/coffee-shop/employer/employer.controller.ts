@@ -9,32 +9,32 @@ export class EmployerController {
 
     @Get()
     findAll() {
-        return this.employerService.findAll();
+        return this.employerService.findAllDailyReport();
     }
 
     @Get(":id")
     findById(@Param("id") id: string) {
-        return this.employerService.findById(id);
+        return this.employerService.findByIdEmployer(id);
     }
 
     @Post()
     @UsePipes(new ValidationPipe())
     create(@Body() dto: CreateEmployerDto) {
-        return this.employerService.create(dto);
+        return this.employerService.createEmployer(dto);
     }
 
     @Put(":id")
     update(@Param("id") id: string, @Body() dto: UpdateEmployerDto) {
-        return this.employerService.update(id, dto);
+        return this.employerService.updateEmployer(id, dto);
     }
 
     @Delete(":id")
     delete(@Param("id") id: string) {
-        return this.employerService.delete(id);
+        return this.employerService.deleteEmployer(id);
     }
 
     @Delete()
     deleteAll() {
-        return this.employerService.deleteAll();
+        return this.employerService.deleteAllEmployers();
     }
 }

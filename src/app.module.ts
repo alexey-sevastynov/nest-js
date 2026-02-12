@@ -9,6 +9,7 @@ import { AddressModule } from "./resources/address/address.module";
 import { AuthModule } from "./resources/auth/auth.module";
 import { PasswordResetModule } from "./resources/password-reset/password-reset.module";
 import { EmployerModule } from "./resources/coffee-shop/employer/employer.module";
+import { DailyReportModule } from "./resources/coffee-shop/daily-report/daily-report.module";
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { EmployerModule } from "./resources/coffee-shop/employer/employer.module
         AuthModule,
         PasswordResetModule,
         EmployerModule,
+        DailyReportModule,
     ],
     controllers: [AppController],
     providers: [AppService],
