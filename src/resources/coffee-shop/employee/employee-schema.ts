@@ -9,7 +9,7 @@ export class Employee {
     @Prop({ required: true })
     name: string;
 
-    @Prop({ enum: employeePositionKeys })
+    @Prop({ required: true, enum: employeePositionKeys })
     position?: EmployeePositionKey;
 
     @Prop()
@@ -17,6 +17,18 @@ export class Employee {
 
     @Prop({ default: true })
     isActive: boolean;
+
+    @Prop()
+    phone?: string;
+
+    @Prop()
+    birthDate?: Date;
+
+    @Prop({ default: Date.now })
+    employmentStartDate: Date;
+
+    @Prop()
+    employmentEndDate?: Date;
 }
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);

@@ -5,9 +5,8 @@ export class CreateEmployeeDto {
     @IsString()
     name: string;
 
-    @IsOptional()
     @IsEnum(employeePositionKeys)
-    position?: EmployeePositionKey;
+    position: EmployeePositionKey;
 
     @IsOptional()
     @IsNumber()
@@ -16,4 +15,20 @@ export class CreateEmployeeDto {
     @IsOptional()
     @IsBoolean()
     isActive?: number;
+
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @IsOptional()
+    @IsString()
+    birthDate?: string;
+
+    @IsOptional()
+    @IsString()
+    employmentStartDate?: string;
+
+    @IsOptional()
+    @IsString()
+    employmentEndDate?: string;
 }
