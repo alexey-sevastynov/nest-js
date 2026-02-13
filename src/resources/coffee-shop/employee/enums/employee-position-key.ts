@@ -1,4 +1,4 @@
-export const employerPositionKeys = {
+export const employeePositionKeys = {
     owner: "owner",
     manager: "manager",
     barista: "barista",
@@ -8,4 +8,4 @@ export const employerPositionKeys = {
     accountant: "accountant",
 } as const;
 
-export type EmployerPositionKey = (typeof employerPositionKeys)[keyof typeof employerPositionKeys];
+export type EmployeePositionKey = (typeof employeePositionKeys)[keyof typeof employeePositionKeys];

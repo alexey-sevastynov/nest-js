@@ -1,6 +1,6 @@
 import mongoose, { Document } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Employer } from "../../../resources/coffee-shop/employer/employer-schema";
+import { Employee } from "../../../resources/coffee-shop/employee/employee-schema";
 
 export type DailyReportDocument = DailyReport & Document;
 
@@ -15,8 +15,8 @@ export class DailyReport {
     @Prop({ required: true })
     terminalRevenue: number;
 
-    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: Employer.name })
-    employee: Employer;
+    @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
+    employee: Employee;
 
     @Prop({ required: true })
     costOfGoods: number;

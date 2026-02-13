@@ -4,7 +4,7 @@ import { Model } from "mongoose";
 import { percent, toDecimalPercent } from "../../../common/utils/math";
 import { errorMessages } from "../../../common/constants/error-messages";
 import { DailyReport, DailyReportDocument } from "./daily-report-schema";
-import { Employer, EmployerDocument } from "../employer/employer-schema";
+import { Employee, EmployeeDocument } from "../employee/employee-schema";
 import { CreateDailyReportDto } from "./dto/create-daily-report-dto";
 import { UpdateDailyReportDto } from "./dto/update-daily-report-dto";
 import { dailyReportProps } from "./constants/daily-report-props";
@@ -17,8 +17,8 @@ export class DailyReportService {
     constructor(
         @InjectModel(DailyReport.name)
         private readonly dailyModel: Model<DailyReportDocument>,
-        @InjectModel(Employer.name)
-        private readonly employerModel: Model<EmployerDocument>,
+        @InjectModel(Employee.name)
+        private readonly employeeModel: Model<EmployeeDocument>,
     ) {}
 
     findAllDailyReport() {
@@ -34,9 +34,9 @@ export class DailyReportService {
     }
 
     async createDailyReport(createDailyReportDto: CreateDailyReportDto) {
-        const employee = await this.employerModel.findById(createDailyReportDto.employee);
+        const employee = await this.employeeModel.findById(createDailyReportDto.employee);
 
-        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employer.name));
+        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
 
         const calculatedDailyReportFields = this.getCalculatedDailyReportFields(
             employee,
@@ -58,9 +58,9 @@ export class DailyReportService {
 
         Object.assign(dailyModel, updateDailyReportDto);
 
-        const employee = await this.employerModel.findById(dailyModel.employee);
+        const employee = await this.employeeModel.findById(dailyModel.employee);
 
-        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employer.name));
+        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
 
         Object.assign(dailyModel, this.getCalculatedDailyReportFields(employee, dailyModel));
 
@@ -79,7 +79,7 @@ export class DailyReportService {
         return { deletedCount: result.deletedCount };
     }
 
-    private getCalculatedDailyReportFields(employee: Employer, dailyReportInput: DailyReportInput) {
+    private getCalculatedDailyReportFields(employee: Employee, dailyReportInput: DailyReportInput) {
         const employeeBonus = dailyReportInput.employeeBonus ?? 0;
         const employeeTotalSalary = (employee.fixedSalary ?? 0) + employeeBonus;
         const totalRevenue = dailyReportInput.cashRevenue + dailyReportInput.terminalRevenue;

@@ -1,13 +1,13 @@
 import { IsString, IsOptional, IsNumber, IsEnum, IsBoolean } from "class-validator";
-import { type EmployerPositionKey, employerPositionKeys } from "../enums/employer-position-key";
+import { type EmployeePositionKey, employeePositionKeys } from "../enums/employee-position-key";
 
-export class CreateEmployerDto {
+export class CreateEmployeeDto {
     @IsString()
     name: string;
 
     @IsOptional()
-    @IsEnum(employerPositionKeys)
-    position?: EmployerPositionKey;
+    @IsEnum(employeePositionKeys)
+    position?: EmployeePositionKey;
 
     @IsOptional()
     @IsNumber()
