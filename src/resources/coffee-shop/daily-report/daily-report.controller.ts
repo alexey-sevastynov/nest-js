@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Controller, Get, Post, Delete, Body, Param, UsePipes, ValidationPipe, Patch } from "@nestjs/common";
 import { DailyReportService } from "./daily-report.service";
 import { CreateDailyReportDto } from "./dto/create-daily-report-dto";
 import { UpdateDailyReportDto } from "./dto/update-daily-report-dto";
@@ -23,7 +23,7 @@ export class DailyReportController {
         return this.service.createDailyReport(dto);
     }
 
-    @Put(":id")
+    @Patch(":id")
     @UsePipes(new ValidationPipe())
     update(@Param("id") id: string, @Body() dto: UpdateDailyReportDto) {
         return this.service.updateDailyReport(id, dto);
