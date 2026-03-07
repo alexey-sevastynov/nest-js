@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, FilterQuery } from "mongoose";
 import { percent, toDecimalPercent } from "../../../common/utils/math";
 import { errorMessages } from "../../../common/constants/error-messages";
 import { DailyReport, DailyReportDocument } from "./daily-report-schema";
@@ -21,8 +21,13 @@ export class DailyReportService {
         private readonly employeeModel: Model<EmployeeDocument>,
     ) {}
 
-    findAllDailyReport() {
-        return this.dailyModel.find().sort({ date: -1 }).populate(dailyReportProps.employee);
+    findAllDailyReport(startDate?: string, endDate?: string) {
+        const query: FilterQuery<DailyReportDocument> = {};
+        const dateFilter = this.buildDateFilter(startDate, endDate);
+
+        if (dateFilter) query.date = dateFilter;
+
+        return this.dailyModel.find(query).sort({ date: -1 }).populate(dailyReportProps.employee);
     }
 
     async findByIdDailyReport(id: string) {
@@ -114,5 +119,14 @@ export class DailyReportService {
         acquiringFee: number,
     ) {
         return totalRevenue - costOfGoods - productWriteOffs - employeeTotalSalary - acquiringFee;
+    }
+
+    private buildDateFilter(startDate?: string, endDate?: string) {
+        if (!startDate && !endDate) return;
+
+        return {
+            ...(startDate && { $gte: new Date(startDate) }),
+            ...(endDate && { $lte: new Date(endDate) }),
+        };
     }
 }

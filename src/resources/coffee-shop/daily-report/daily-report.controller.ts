@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Delete, Body, Param, UsePipes, ValidationPipe, Patch } from "@nestjs/common";
+import {
+    Controller,
+    Get,
+    Post,
+    Delete,
+    Body,
+    Param,
+    UsePipes,
+    ValidationPipe,
+    Patch,
+    Query,
+} from "@nestjs/common";
 import { DailyReportService } from "./daily-report.service";
 import { CreateDailyReportDto } from "./dto/create-daily-report-dto";
 import { UpdateDailyReportDto } from "./dto/update-daily-report-dto";
@@ -8,8 +19,8 @@ export class DailyReportController {
     constructor(private readonly service: DailyReportService) {}
 
     @Get()
-    findAll() {
-        return this.service.findAllDailyReport();
+    findAll(@Query("startDate") startDate?: string, @Query("endDate") endDate?: string) {
+        return this.service.findAllDailyReport(startDate, endDate);
     }
 
     @Get(":id")
