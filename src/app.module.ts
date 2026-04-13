@@ -11,6 +11,7 @@ import { PasswordResetModule } from "./resources/password-reset/password-reset.m
 import { EmployeeModule } from "./resources/coffee-shop/employee/employee.module";
 import { DailyReportModule } from "./resources/coffee-shop/daily-report/daily-report.module";
 import { ExpenseReportModule } from "./resources/coffee-shop/expense-report/expense-report.module";
+import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.module";
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { ExpenseReportModule } from "./resources/coffee-shop/expense-report/expe
         EmployeeModule,
         DailyReportModule,
         ExpenseReportModule,
+        StatisticsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

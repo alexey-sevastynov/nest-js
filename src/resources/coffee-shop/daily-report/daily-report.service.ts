@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { percent, toDecimalPercent } from "../../../common/utils/math";
+import { percent, toDecimalPercent } from "../../../common/lib/math";
 import { errorMessages } from "../../../common/constants/error-messages";
 import { DailyReport, DailyReportDocument } from "./daily-report-schema";
 import { Employee, EmployeeDocument } from "../employee/employee-schema";
