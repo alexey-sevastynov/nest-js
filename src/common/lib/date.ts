@@ -1,20 +1,13 @@
-import { endOfDay, parseISO, startOfDay } from "date-fns";
-import { isString } from "../../common/utils/guards";
+export function getStartOfDay(date: Date | string) {
+    const parsedDate = new Date(date);
+    parsedDate.setHours(0, 0, 0, 0);
 
-export function startOfDayNormalized(date: Date | string) {
-    return startOfDay(normalizeToDate(date));
+    return parsedDate;
 }
 
-export function endOfDayNormalized(date: Date | string) {
-    return endOfDay(normalizeToDate(date));
-}
+export function getEndOfDay(date: Date | string) {
+    const parsedDate = new Date(date);
+    parsedDate.setHours(23, 59, 59, 999);
 
-function normalizeToDate(date: Date | string) {
-    if (isString(date)) {
-        const dateOnly = date.substring(0, 10);
-
-        return parseISO(dateOnly);
-    }
-
-    return date;
+    return parsedDate;
 }

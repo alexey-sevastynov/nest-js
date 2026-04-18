@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { startOfDayNormalized, endOfDayNormalized } from "../../../common/lib/date";
+import { getStartOfDay, getEndOfDay } from "../../../common/lib/date";
 import { percent, round } from "../../../common/lib/math";
 import { DailyReport, DailyReportDocument } from "../daily-report/daily-report-schema";
 import { expenseReportTypes } from "../expense-report/enums/expense-report-type";
@@ -22,8 +22,8 @@ export class StatisticsService {
     ) {}
 
     async getStatistics(dateRange: GetStatisticsDto) {
-        const startOfDay = startOfDayNormalized(dateRange.from);
-        const endOfDay = endOfDayNormalized(dateRange.to);
+        const startOfDay = getStartOfDay(dateRange.from);
+        const endOfDay = getEndOfDay(dateRange.to);
         const dailyReports = await this.getDailyReports(startOfDay, endOfDay);
         const dailyExpenses = await this.getDailyExpenses(startOfDay, endOfDay);
         const monthlyExpenses = await this.getMonthlyExpenses(startOfDay, endOfDay);
