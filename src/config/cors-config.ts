@@ -43,7 +43,13 @@ export function serverlessCors(request: Request, response: Response, next: NextF
 }
 
 function isCorsOriginAllowed(origin: string) {
-    return corsAllowedOrigins.includes(origin);
+    try {
+        const url = new URL(origin);
+
+        return corsAllowedOrigins.includes(origin) || url.hostname.endsWith(".vercel.app");
+    } catch {
+        return false;
+    }
 }
 
 function isPreflightRequest(method: string) {
