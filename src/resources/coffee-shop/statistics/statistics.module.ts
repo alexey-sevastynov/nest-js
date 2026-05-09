@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { DailyReport, DailyReportSchema } from "../daily-report/daily-report-schema";
 import { ExpenseReport, ExpenseReportSchema } from "../expense-report/expense-report-schema";
+import { InventoryAudit, InventoryAuditSchema } from "../inventory-audit/inventory-audit-schema";
 import { StatisticsService } from "./statistics.service";
 import { StatisticsController } from "./statistics.controller";
 
@@ -10,6 +11,7 @@ import { StatisticsController } from "./statistics.controller";
         MongooseModule.forFeature([
             { name: DailyReport.name, schema: DailyReportSchema },
             { name: ExpenseReport.name, schema: ExpenseReportSchema },
+            { name: InventoryAudit.name, schema: InventoryAuditSchema },
         ]),
     ],
     controllers: [StatisticsController],

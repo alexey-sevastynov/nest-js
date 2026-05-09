@@ -11,6 +11,7 @@ import { PasswordResetModule } from "./resources/password-reset/password-reset.m
 import { EmployeeModule } from "./resources/coffee-shop/employee/employee.module";
 import { DailyReportModule } from "./resources/coffee-shop/daily-report/daily-report.module";
 import { ExpenseReportModule } from "./resources/coffee-shop/expense-report/expense-report.module";
+import { InventoryAuditModule } from "./resources/coffee-shop/inventory-audit/inventory-audit.module";
 import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.module";
 
 @Module({
@@ -25,6 +26,7 @@ import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.
         EmployeeModule,
         DailyReportModule,
         ExpenseReportModule,
+        InventoryAuditModule,
         StatisticsModule,
     ],
     controllers: [AppController],

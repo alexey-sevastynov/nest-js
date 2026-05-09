@@ -6,8 +6,10 @@ import { percent, round } from "../../../common/lib/math";
 import { DailyReport, DailyReportDocument } from "../daily-report/daily-report-schema";
 import { expenseReportTypes } from "../expense-report/enums/expense-report-type";
 import { ExpenseReport, ExpenseReportDocument } from "../expense-report/expense-report-schema";
+import { InventoryAudit, InventoryAuditDocument } from "../inventory-audit/inventory-audit-schema";
 import { GetStatisticsDto } from "./dto/get-statistics.dto";
 import { EmployeeStats } from "./types/employee-stats";
+import { InventoryAuditTotals } from "./types/inventory-audit-totals";
 import { CoffeeShopStatistics } from "./types/statistic-coffee-shop";
 import { StatisticsPercentages } from "./types/statistics-percentages";
 import { ExpensesBreakdown } from "./types/expenses-breakdown";
@@ -19,6 +21,8 @@ export class StatisticsService {
         private readonly dailyReportModel: Model<DailyReportDocument>,
         @InjectModel(ExpenseReport.name)
         private readonly expenseReportModel: Model<ExpenseReportDocument>,
+        @InjectModel(InventoryAudit.name)
+        private readonly inventoryAuditModel: Model<InventoryAuditDocument>,
     ) {}
 
     async getStatistics(dateRange: GetStatisticsDto) {
@@ -27,12 +31,14 @@ export class StatisticsService {
         const dailyReports = await this.getDailyReports(startOfDay, endOfDay);
         const dailyExpenses = await this.getDailyExpenses(startOfDay, endOfDay);
         const monthlyExpenses = await this.getMonthlyExpenses(startOfDay, endOfDay);
+        const inventoryAudits = await this.getInventoryAudits(startOfDay, endOfDay);
         const coffeeShopStatistics = this.createCoffeeShopStatistics(
             startOfDay,
             endOfDay,
             dailyReports,
             dailyExpenses,
             monthlyExpenses,
+            inventoryAudits,
         );
 
         return coffeeShopStatistics;
@@ -63,6 +69,15 @@ export class StatisticsService {
         });
 
         return monthlyExpenses;
+    }
+
+    private async getInventoryAudits(startOfDay: Date, endOfDay: Date) {
+        const inventoryAudits = await this.inventoryAuditModel.find({
+            validFrom: { $lte: endOfDay },
+            validTo: { $gte: startOfDay },
+        });
+
+        return inventoryAudits;
     }
 
     private createStatisticsPercentages(
@@ -183,12 +198,50 @@ export class StatisticsService {
         return totalMonthlyExpensesAmount;
     }
 
+    private calculateInventoryAuditTotals(
+        startOfDay: Date,
+        endOfDay: Date,
+        inventoryAudits: InventoryAudit[],
+    ): InventoryAuditTotals {
+        const dayMs = 24 * 60 * 60 * 1000;
+        let shortageAmount = 0;
+        let surplusAmount = 0;
+
+        for (const audit of inventoryAudits) {
+            const activeFrom = new Date(audit.validFrom);
+            activeFrom.setHours(0, 0, 0, 0);
+
+            const activeTo = new Date(audit.validTo);
+            activeTo.setHours(23, 59, 59, 999);
+
+            const overlapStart = new Date(Math.max(startOfDay.getTime(), activeFrom.getTime()));
+            const overlapEnd = new Date(Math.min(endOfDay.getTime(), activeTo.getTime()));
+
+            if (overlapStart > overlapEnd) continue;
+
+            const totalPeriodDays = Math.ceil((activeTo.getTime() - activeFrom.getTime() + 1) / dayMs);
+            const overlapDays = Math.ceil((overlapEnd.getTime() - overlapStart.getTime() + 1) / dayMs);
+
+            shortageAmount += (audit.shortageAmount / totalPeriodDays) * overlapDays;
+            surplusAmount += (audit.surplusAmount / totalPeriodDays) * overlapDays;
+        }
+
+        const inventoryAuditTotals: InventoryAuditTotals = {
+            totalInventoryShortageAmount: shortageAmount,
+            totalInventorySurplusAmount: surplusAmount,
+            inventoryAuditAdjustmentAmount: surplusAmount - shortageAmount,
+        };
+
+        return inventoryAuditTotals;
+    }
+
     private createCoffeeShopStatistics(
         startOfDay: Date,
         endOfDay: Date,
         dailyReports: DailyReport[],
         dailyExpenses: ExpenseReport[],
         monthlyExpenses: ExpenseReport[],
+        inventoryAudits: InventoryAudit[],
     ) {
         const aggregatedDaily = this.aggregateDailyReports(dailyReports);
         let totalDailyExpensesAmount = 0;
@@ -201,6 +254,11 @@ export class StatisticsService {
             startOfDay,
             endOfDay,
             monthlyExpenses,
+        );
+        const inventoryAuditTotals = this.calculateInventoryAuditTotals(
+            startOfDay,
+            endOfDay,
+            inventoryAudits,
         );
 
         const totalExpensesAmount = totalDailyExpensesAmount + totalMonthlyExpensesAmount;
@@ -229,9 +287,18 @@ export class StatisticsService {
             productWriteOffs: round(aggregatedDaily.productWriteOffs),
             acquiringFee: round(aggregatedDaily.acquiringFee),
             totalExpenses: round(totalExpensesAmount),
+            inventoryAuditTotals: {
+                totalInventoryShortageAmount: round(inventoryAuditTotals.totalInventoryShortageAmount),
+                totalInventorySurplusAmount: round(inventoryAuditTotals.totalInventorySurplusAmount),
+                inventoryAuditAdjustmentAmount: round(inventoryAuditTotals.inventoryAuditAdjustmentAmount),
+            },
             breakdown: this.createExpensesBreakdown(totalDailyExpensesAmount, totalMonthlyExpensesAmount),
             netProfit: round(aggregatedDaily.netProfit),
-            netProfitAfterExpenses: round(aggregatedDaily.netProfit - totalExpensesAmount),
+            netProfitAfterExpenses: round(
+                aggregatedDaily.netProfit -
+                    totalExpensesAmount +
+                    inventoryAuditTotals.inventoryAuditAdjustmentAmount,
+            ),
             percentages: this.createStatisticsPercentages(
                 aggregatedDaily.totalRevenue,
                 totalEmployeesSalary,

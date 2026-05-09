@@ -1,6 +1,7 @@
 import { type DateRange } from "../../../../common/types/date-range/date-range-type";
 import { type EmployeeStats } from "./employee-stats";
 import { type ExpensesBreakdown } from "./expenses-breakdown";
+import { type InventoryAuditTotals } from "./inventory-audit-totals";
 import { type StatisticsPercentages } from "./statistics-percentages";
 
 export interface CoffeeShopStatistics {
@@ -14,6 +15,7 @@ export interface CoffeeShopStatistics {
     productWriteOffs: number;
     acquiringFee: number;
     totalExpenses: number;
+    inventoryAuditTotals: InventoryAuditTotals;
     breakdown: ExpensesBreakdown;
     netProfit: number;
     netProfitAfterExpenses: number;
