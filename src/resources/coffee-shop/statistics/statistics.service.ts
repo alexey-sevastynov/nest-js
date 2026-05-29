@@ -85,14 +85,21 @@ export class StatisticsService {
         totalEmployeesSalary: number,
         costOfGoods: number,
         productWriteOffs: number,
+        inventoryShortageAmount: number,
+        inventorySurplusAmount: number,
         cashRevenue: number,
         terminalRevenue: number,
         acquiringFee: number,
     ) {
+        const inventoryNetAdjustmentAmount = inventorySurplusAmount - inventoryShortageAmount;
+
         const statisticsPercentages: StatisticsPercentages = {
             salaryPercent: percent(totalEmployeesSalary, totalRevenue),
             costPercent: percent(costOfGoods, totalRevenue),
             writeOffPercent: percent(productWriteOffs, totalRevenue),
+            inventoryShortagePercent: percent(inventoryShortageAmount, totalRevenue),
+            inventorySurplusPercent: percent(inventorySurplusAmount, totalRevenue),
+            inventoryNetAdjustmentPercent: percent(inventoryNetAdjustmentAmount, totalRevenue),
             cashPercent: percent(cashRevenue, totalRevenue),
             terminalPercent: percent(terminalRevenue, totalRevenue),
             acquiringPercent: percent(acquiringFee, totalRevenue),
@@ -304,6 +311,8 @@ export class StatisticsService {
                 totalEmployeesSalary,
                 aggregatedDaily.costOfGoods,
                 aggregatedDaily.productWriteOffs,
+                inventoryAuditTotals.totalInventoryShortageAmount,
+                inventoryAuditTotals.totalInventorySurplusAmount,
                 aggregatedDaily.cashRevenue,
                 aggregatedDaily.terminalRevenue,
                 aggregatedDaily.acquiringFee,
