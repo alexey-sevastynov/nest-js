@@ -16,7 +16,7 @@ export interface CoffeeShopStatistics {
     acquiringFee: number;
     totalExpenses: number;
     inventoryAuditTotals: InventoryAuditTotals;
-    breakdown: ExpensesBreakdown;
+    expensesBreakdown: ExpensesBreakdown;
     netProfit: number;
     netProfitAfterExpenses: number;
     percentages: StatisticsPercentages;

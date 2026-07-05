@@ -9,10 +9,14 @@ import { ExpenseReport, ExpenseReportDocument } from "../expense-report/expense-
 import { InventoryAudit, InventoryAuditDocument } from "../inventory-audit/inventory-audit-schema";
 import { GetStatisticsDto } from "./dto/get-statistics.dto";
 import { EmployeeStats } from "./types/employee-stats";
+import { InventoryAuditBreakdownItem } from "./types/inventory-audit-breakdown-item";
 import { InventoryAuditTotals } from "./types/inventory-audit-totals";
 import { CoffeeShopStatistics } from "./types/statistic-coffee-shop";
 import { StatisticsPercentages } from "./types/statistics-percentages";
 import { ExpensesBreakdown } from "./types/expenses-breakdown";
+import { ExpenseBreakdownItem } from "./types/expense-breakdown-item";
+import { InventoryAuditType } from "./types/inventory-audit-type";
+import { inventoryAuditTypes } from "./constants/inventory-audit-types";
 
 @Injectable()
 export class StatisticsService {
@@ -108,13 +112,115 @@ export class StatisticsService {
         return statisticsPercentages;
     }
 
-    private createExpensesBreakdown(totalDailyExpensesAmount: number, totalMonthlyExpensesAmount: number) {
+    private createExpensesBreakdown(
+        startOfDay: Date,
+        endOfDay: Date,
+        dailyExpenses: ExpenseReport[],
+        monthlyExpenses: ExpenseReport[],
+        totalDailyExpensesAmount: number,
+        totalMonthlyExpensesAmount: number,
+    ) {
+        const dailyExpenseItems = this.buildDailyExpenseItems(dailyExpenses);
+        const monthlyExpenseItems = this.buildMonthlyExpenseItems(startOfDay, endOfDay, monthlyExpenses);
+
         const expensesBreakdown: ExpensesBreakdown = {
-            dailyExpenses: round(totalDailyExpensesAmount),
-            monthlyExpensesApportioned: round(totalMonthlyExpensesAmount),
+            dailyExpenses: {
+                totalAmount: round(totalDailyExpensesAmount),
+                expenseItems: dailyExpenseItems,
+            },
+            monthlyExpenses: {
+                totalAmount: round(totalMonthlyExpensesAmount),
+                expenseItems: monthlyExpenseItems,
+            },
         };
 
         return expensesBreakdown;
+    }
+
+    private buildDailyExpenseItems(dailyExpenses: ExpenseReport[]): ExpenseBreakdownItem[] {
+        const grouped = new Map<
+            string,
+            { title: string; description?: string; amount: number; count: number }
+        >();
+
+        for (const expense of dailyExpenses) {
+            const key = `${expense.title}\0${expense.description ?? ""}`;
+            const existing = grouped.get(key);
+
+            if (existing) {
+                existing.amount += expense.amount;
+                existing.count += 1;
+            } else {
+                grouped.set(key, {
+                    title: expense.title,
+                    description: expense.description,
+                    amount: expense.amount,
+                    count: 1,
+                });
+            }
+        }
+
+        return Array.from(grouped.values()).map((item) => ({
+            title: item.title,
+            amount: round(item.amount),
+            description: item.description,
+            type: expenseReportTypes.daily,
+            count: item.count,
+        }));
+    }
+
+    private buildMonthlyExpenseItems(
+        startOfDay: Date,
+        endOfDay: Date,
+        monthlyExpenses: ExpenseReport[],
+    ): ExpenseBreakdownItem[] {
+        return monthlyExpenses.map((expense) => {
+            const { amount, activeDays } = this.calculateMonthlyExpenseApportioned(
+                startOfDay,
+                endOfDay,
+                expense,
+            );
+
+            return {
+                title: expense.title,
+                amount: round(amount),
+                description: expense.description,
+                type: expenseReportTypes.monthly,
+                count: activeDays,
+            };
+        });
+    }
+
+    private calculateMonthlyExpenseApportioned(startOfDay: Date, endOfDay: Date, expense: ExpenseReport) {
+        const dayMs = 24 * 60 * 60 * 1000;
+        const startTs = startOfDay.getTime();
+        const endTs = endOfDay.getTime();
+        let amount = 0;
+        let activeDays = 0;
+
+        for (let ts = startTs; ts <= endTs; ts += dayMs) {
+            const d = new Date(ts);
+            const year = d.getFullYear();
+            const month = d.getMonth();
+            const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
+
+            const activeFrom = new Date(expense.validFrom as Date);
+            activeFrom.setHours(0, 0, 0, 0);
+
+            let activeTo: Date | null = null;
+            if (expense.validTo) {
+                activeTo = new Date(expense.validTo);
+                activeTo.setHours(23, 59, 59, 999);
+            }
+
+            const tsDate = d.getTime();
+            if (tsDate >= activeFrom.getTime() && (!activeTo || tsDate <= activeTo.getTime())) {
+                amount += expense.amount / daysInCurrentMonth;
+                activeDays += 1;
+            }
+        }
+
+        return { amount, activeDays };
     }
 
     private aggregateDailyReports(dailyReports: DailyReport[]) {
@@ -174,72 +280,110 @@ export class StatisticsService {
         endOfDay: Date,
         monthlyExpenses: ExpenseReport[],
     ) {
-        const dayMs = 24 * 60 * 60 * 1000;
-        const startTs = startOfDay.getTime();
-        const endTs = endOfDay.getTime();
         let totalMonthlyExpensesAmount = 0;
 
-        for (let ts = startTs; ts <= endTs; ts += dayMs) {
-            const d = new Date(ts);
-            const year = d.getFullYear();
-            const month = d.getMonth();
-            const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
-
-            for (const expense of monthlyExpenses) {
-                const activeFrom = new Date(expense.validFrom as Date);
-                activeFrom.setHours(0, 0, 0, 0);
-
-                let activeTo: Date | null = null;
-                if (expense.validTo) {
-                    activeTo = new Date(expense.validTo);
-                    activeTo.setHours(23, 59, 59, 999);
-                }
-
-                const tsDate = d.getTime();
-                if (tsDate >= activeFrom.getTime() && (!activeTo || tsDate <= activeTo.getTime())) {
-                    totalMonthlyExpensesAmount += expense.amount / daysInCurrentMonth;
-                }
-            }
+        for (const expense of monthlyExpenses) {
+            const { amount } = this.calculateMonthlyExpenseApportioned(startOfDay, endOfDay, expense);
+            totalMonthlyExpensesAmount += amount;
         }
 
         return totalMonthlyExpensesAmount;
     }
 
-    private calculateInventoryAuditTotals(
+    private createInventoryAuditTotals(
         startOfDay: Date,
         endOfDay: Date,
         inventoryAudits: InventoryAudit[],
     ): InventoryAuditTotals {
-        const dayMs = 24 * 60 * 60 * 1000;
-        let shortageAmount = 0;
-        let surplusAmount = 0;
+        let totalShortageAmount = 0;
+        let totalSurplusAmount = 0;
 
-        for (const audit of inventoryAudits) {
-            const activeFrom = new Date(audit.validFrom);
-            activeFrom.setHours(0, 0, 0, 0);
+        for (const inventoryAudit of inventoryAudits) {
+            const apportionedAudit = this.calculateInventoryAuditApportioned(
+                startOfDay,
+                endOfDay,
+                inventoryAudit,
+            );
 
-            const activeTo = new Date(audit.validTo);
-            activeTo.setHours(23, 59, 59, 999);
-
-            const overlapStart = new Date(Math.max(startOfDay.getTime(), activeFrom.getTime()));
-            const overlapEnd = new Date(Math.min(endOfDay.getTime(), activeTo.getTime()));
-
-            if (overlapStart > overlapEnd) continue;
-
-            const totalPeriodDays = Math.ceil((activeTo.getTime() - activeFrom.getTime() + 1) / dayMs);
-            const overlapDays = Math.ceil((overlapEnd.getTime() - overlapStart.getTime() + 1) / dayMs);
-
-            shortageAmount += (audit.shortageAmount / totalPeriodDays) * overlapDays;
-            surplusAmount += (audit.surplusAmount / totalPeriodDays) * overlapDays;
+            totalShortageAmount += apportionedAudit.shortageAmount;
+            totalSurplusAmount += apportionedAudit.surplusAmount;
         }
 
         const inventoryAuditTotals: InventoryAuditTotals = {
-            totalInventoryShortageAmount: shortageAmount,
-            totalInventorySurplusAmount: surplusAmount,
-            inventoryAuditAdjustmentAmount: surplusAmount - shortageAmount,
+            shortage: {
+                totalAmount: round(totalShortageAmount),
+                items: this.buildInventoryAuditItems(
+                    startOfDay,
+                    endOfDay,
+                    inventoryAudits,
+                    inventoryAuditTypes.shortage,
+                ),
+            },
+            surplus: {
+                totalAmount: round(totalSurplusAmount),
+                items: this.buildInventoryAuditItems(
+                    startOfDay,
+                    endOfDay,
+                    inventoryAudits,
+                    inventoryAuditTypes.surplus,
+                ),
+            },
+            inventoryAuditAdjustmentAmount: round(totalSurplusAmount - totalShortageAmount),
         };
 
         return inventoryAuditTotals;
+    }
+
+    private buildInventoryAuditItems(
+        startOfDay: Date,
+        endOfDay: Date,
+        inventoryAudits: InventoryAudit[],
+        type: InventoryAuditType,
+    ): InventoryAuditBreakdownItem[] {
+        const inventoryAuditBreakdownItems: InventoryAuditBreakdownItem[] = [];
+
+        for (const audit of inventoryAudits) {
+            const apportionedAudit = this.calculateInventoryAuditApportioned(startOfDay, endOfDay, audit);
+            const periodAmount =
+                type === inventoryAuditTypes.shortage
+                    ? apportionedAudit.shortageAmount
+                    : apportionedAudit.surplusAmount;
+
+            if (periodAmount <= 0 || apportionedAudit.overlapDays <= 0) continue;
+
+            inventoryAuditBreakdownItems.push({
+                productTitle: audit.title,
+                periodAmount: round(periodAmount),
+                description: audit.description,
+                activeDays: apportionedAudit.overlapDays,
+            });
+        }
+
+        return inventoryAuditBreakdownItems;
+    }
+
+    private calculateInventoryAuditApportioned(startOfDay: Date, endOfDay: Date, audit: InventoryAudit) {
+        const dayMs = 24 * 60 * 60 * 1000;
+        const activeFrom = new Date(audit.validFrom);
+        activeFrom.setHours(0, 0, 0, 0);
+
+        const activeTo = new Date(audit.validTo);
+        activeTo.setHours(23, 59, 59, 999);
+
+        const overlapStart = new Date(Math.max(startOfDay.getTime(), activeFrom.getTime()));
+        const overlapEnd = new Date(Math.min(endOfDay.getTime(), activeTo.getTime()));
+
+        if (overlapStart > overlapEnd) {
+            return { shortageAmount: 0, surplusAmount: 0, overlapDays: 0 };
+        }
+
+        const totalPeriodDays = Math.ceil((activeTo.getTime() - activeFrom.getTime() + 1) / dayMs);
+        const overlapDays = Math.ceil((overlapEnd.getTime() - overlapStart.getTime() + 1) / dayMs);
+
+        const shortageAmount = (audit.shortageAmount / totalPeriodDays) * overlapDays;
+        const surplusAmount = (audit.surplusAmount / totalPeriodDays) * overlapDays;
+
+        return { shortageAmount, surplusAmount, overlapDays };
     }
 
     private createCoffeeShopStatistics(
@@ -262,11 +406,7 @@ export class StatisticsService {
             endOfDay,
             monthlyExpenses,
         );
-        const inventoryAuditTotals = this.calculateInventoryAuditTotals(
-            startOfDay,
-            endOfDay,
-            inventoryAudits,
-        );
+        const inventoryAuditTotals = this.createInventoryAuditTotals(startOfDay, endOfDay, inventoryAudits);
 
         const totalExpensesAmount = totalDailyExpensesAmount + totalMonthlyExpensesAmount;
 
@@ -294,12 +434,15 @@ export class StatisticsService {
             productWriteOffs: round(aggregatedDaily.productWriteOffs),
             acquiringFee: round(aggregatedDaily.acquiringFee),
             totalExpenses: round(totalExpensesAmount),
-            inventoryAuditTotals: {
-                totalInventoryShortageAmount: round(inventoryAuditTotals.totalInventoryShortageAmount),
-                totalInventorySurplusAmount: round(inventoryAuditTotals.totalInventorySurplusAmount),
-                inventoryAuditAdjustmentAmount: round(inventoryAuditTotals.inventoryAuditAdjustmentAmount),
-            },
-            breakdown: this.createExpensesBreakdown(totalDailyExpensesAmount, totalMonthlyExpensesAmount),
+            inventoryAuditTotals,
+            expensesBreakdown: this.createExpensesBreakdown(
+                startOfDay,
+                endOfDay,
+                dailyExpenses,
+                monthlyExpenses,
+                totalDailyExpensesAmount,
+                totalMonthlyExpensesAmount,
+            ),
             netProfit: round(aggregatedDaily.netProfit),
             netProfitAfterExpenses: round(
                 aggregatedDaily.netProfit -
@@ -311,8 +454,8 @@ export class StatisticsService {
                 totalEmployeesSalary,
                 aggregatedDaily.costOfGoods,
                 aggregatedDaily.productWriteOffs,
-                inventoryAuditTotals.totalInventoryShortageAmount,
-                inventoryAuditTotals.totalInventorySurplusAmount,
+                inventoryAuditTotals.shortage.totalAmount,
+                inventoryAuditTotals.surplus.totalAmount,
                 aggregatedDaily.cashRevenue,
                 aggregatedDaily.terminalRevenue,
                 aggregatedDaily.acquiringFee,
