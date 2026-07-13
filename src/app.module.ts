@@ -13,6 +13,7 @@ import { DailyReportModule } from "./resources/coffee-shop/daily-report/daily-re
 import { ExpenseReportModule } from "./resources/coffee-shop/expense-report/expense-report.module";
 import { InventoryAuditModule } from "./resources/coffee-shop/inventory-audit/inventory-audit.module";
 import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.module";
+import { FacilityExpenseModule } from "./resources/coffee-shop/facility-expense/facility-expense.module";
 
 @Module({
     imports: [
@@ -28,6 +29,7 @@ import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.
         ExpenseReportModule,
         InventoryAuditModule,
         StatisticsModule,
+        FacilityExpenseModule,
     ],
     controllers: [AppController],
     providers: [AppService],
