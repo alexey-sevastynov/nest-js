@@ -14,6 +14,7 @@ import { ExpenseReportModule } from "./resources/coffee-shop/expense-report/expe
 import { InventoryAuditModule } from "./resources/coffee-shop/inventory-audit/inventory-audit.module";
 import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.module";
 import { FacilityExpenseModule } from "./resources/coffee-shop/facility-expense/facility-expense.module";
+import { OwnerWithdrawalModule } from "./resources/coffee-shop/owner-withdrawal/owner-withdrawal.module";
 
 @Module({
     imports: [
@@ -30,6 +31,7 @@ import { FacilityExpenseModule } from "./resources/coffee-shop/facility-expense/
         InventoryAuditModule,
         StatisticsModule,
         FacilityExpenseModule,
+        OwnerWithdrawalModule,
     ],
     controllers: [AppController],
     providers: [AppService],
