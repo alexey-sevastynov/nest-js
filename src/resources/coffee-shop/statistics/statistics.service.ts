@@ -7,6 +7,7 @@ import { DailyReport, DailyReportDocument } from "../daily-report/daily-report-s
 import { expenseReportTypes } from "../expense-report/enums/expense-report-type";
 import { ExpenseReport, ExpenseReportDocument } from "../expense-report/expense-report-schema";
 import { InventoryAudit, InventoryAuditDocument } from "../inventory-audit/inventory-audit-schema";
+import { OwnerWithdrawal, OwnerWithdrawalDocument } from "../owner-withdrawal/owner-withdrawal-schema";
 import { GetStatisticsDto } from "./dto/get-statistics.dto";
 import { EmployeeStats } from "./types/employee-stats";
 import { InventoryAuditBreakdownItem } from "./types/inventory-audit-breakdown-item";
@@ -17,6 +18,8 @@ import { ExpensesBreakdown } from "./types/expenses-breakdown";
 import { ExpenseBreakdownItem } from "./types/expense-breakdown-item";
 import { InventoryAuditType } from "./types/inventory-audit-type";
 import { inventoryAuditTypes } from "./constants/inventory-audit-types";
+import { ExchangeRateResult, ExchangeRateService } from "./services/exchange-rate.service";
+import { OwnerWithdrawalSummary } from "./types/owner-withdrawal-summary";
 
 @Injectable()
 export class StatisticsService {
@@ -27,6 +30,9 @@ export class StatisticsService {
         private readonly expenseReportModel: Model<ExpenseReportDocument>,
         @InjectModel(InventoryAudit.name)
         private readonly inventoryAuditModel: Model<InventoryAuditDocument>,
+        @InjectModel(OwnerWithdrawal.name)
+        private readonly ownerWithdrawalModel: Model<OwnerWithdrawalDocument>,
+        private readonly exchangeRateService: ExchangeRateService,
     ) {}
 
     async getStatistics(dateRange: GetStatisticsDto) {
@@ -36,6 +42,10 @@ export class StatisticsService {
         const dailyExpenses = await this.getDailyExpenses(startOfDay, endOfDay);
         const monthlyExpenses = await this.getMonthlyExpenses(startOfDay, endOfDay);
         const inventoryAudits = await this.getInventoryAudits(startOfDay, endOfDay);
+        const selectedPeriodWithdrawals = await this.getOwnerWithdrawals(startOfDay, endOfDay);
+        const allTimeWithdrawals = await this.getAllTimeOwnerWithdrawals();
+        const exchangeRateInfo = await this.exchangeRateService.getUsdToUahRate();
+
         const coffeeShopStatistics = this.createCoffeeShopStatistics(
             startOfDay,
             endOfDay,
@@ -43,6 +53,9 @@ export class StatisticsService {
             dailyExpenses,
             monthlyExpenses,
             inventoryAudits,
+            selectedPeriodWithdrawals,
+            allTimeWithdrawals,
+            exchangeRateInfo,
         );
 
         return coffeeShopStatistics;
@@ -82,6 +95,20 @@ export class StatisticsService {
         });
 
         return inventoryAudits;
+    }
+
+    private async getOwnerWithdrawals(startOfDay: Date, endOfDay: Date) {
+        const ownerWithdrawals = await this.ownerWithdrawalModel.find({
+            withdrawalDate: { $gte: startOfDay, $lte: endOfDay },
+        });
+
+        return ownerWithdrawals;
+    }
+
+    private async getAllTimeOwnerWithdrawals() {
+        const ownerWithdrawals = await this.ownerWithdrawalModel.find();
+
+        return ownerWithdrawals;
     }
 
     private createStatisticsPercentages(
@@ -386,6 +413,47 @@ export class StatisticsService {
         return { shortageAmount, surplusAmount, overlapDays };
     }
 
+    private createOwnerWithdrawalSummary(
+        selectedPeriodWithdrawals: OwnerWithdrawal[],
+        allTimeWithdrawals: OwnerWithdrawal[],
+        exchangeRateInfo: ExchangeRateResult,
+    ) {
+        const rate = exchangeRateInfo.rate;
+
+        let selectedPeriodUah = 0;
+
+        for (const selectedPeriodWithdrawal of selectedPeriodWithdrawals) {
+            selectedPeriodUah += selectedPeriodWithdrawal.amount ?? 0;
+        }
+        const selectedPeriodRoundedUah = round(selectedPeriodUah);
+        const selectedPeriodRoundedUsd = rate > 0 ? round(selectedPeriodUah / rate) : 0;
+
+        let allTimeUah = 0;
+
+        for (const allTimeWithdrawal of allTimeWithdrawals) {
+            allTimeUah += allTimeWithdrawal.amount ?? 0;
+        }
+        const allTimeRoundedUah = round(allTimeUah);
+        const allTimeRoundedUsd = rate > 0 ? round(allTimeUah / rate) : 0;
+
+        const ownerWithdrawalSummary: OwnerWithdrawalSummary = {
+            selectedPeriod: {
+                totalAmountUah: selectedPeriodRoundedUah,
+                totalAmountUsd: selectedPeriodRoundedUsd,
+                count: selectedPeriodWithdrawals.length,
+            },
+            allTime: {
+                totalAmountUah: allTimeRoundedUah,
+                totalAmountUsd: allTimeRoundedUsd,
+                count: allTimeWithdrawals.length,
+            },
+            exchangeRate: round(rate, 2),
+            rateUpdatedAt: exchangeRateInfo.updatedAt,
+        };
+
+        return ownerWithdrawalSummary;
+    }
+
     private createCoffeeShopStatistics(
         startOfDay: Date,
         endOfDay: Date,
@@ -393,6 +461,9 @@ export class StatisticsService {
         dailyExpenses: ExpenseReport[],
         monthlyExpenses: ExpenseReport[],
         inventoryAudits: InventoryAudit[],
+        selectedPeriodWithdrawals: OwnerWithdrawal[],
+        allTimeWithdrawals: OwnerWithdrawal[],
+        exchangeRateInfo: ExchangeRateResult,
     ) {
         const aggregatedDaily = this.aggregateDailyReports(dailyReports);
         let totalDailyExpensesAmount = 0;
@@ -461,6 +532,11 @@ export class StatisticsService {
                 aggregatedDaily.acquiringFee,
             ),
             employees: Object.values(aggregatedDaily.employeeStats),
+            ownerWithdrawals: this.createOwnerWithdrawalSummary(
+                selectedPeriodWithdrawals,
+                allTimeWithdrawals,
+                exchangeRateInfo,
+            ),
         };
 
         return coffeeShopStatistics;

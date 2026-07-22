@@ -3,6 +3,7 @@ import { type EmployeeStats } from "./employee-stats";
 import { type ExpensesBreakdown } from "./expenses-breakdown";
 import { type InventoryAuditTotals } from "./inventory-audit-totals";
 import { type StatisticsPercentages } from "./statistics-percentages";
+import { type OwnerWithdrawalSummary } from "./owner-withdrawal-summary";
 
 export interface CoffeeShopStatistics {
     period: DateRange;
@@ -21,4 +22,5 @@ export interface CoffeeShopStatistics {
     netProfitAfterExpenses: number;
     percentages: StatisticsPercentages;
     employees: EmployeeStats[];
+    ownerWithdrawals: OwnerWithdrawalSummary;
 }
