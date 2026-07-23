@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { getStartOfDay, getEndOfDay } from "../../../common/lib/date";
+import { getStartOfDay, getEndOfDay, getStartOfMonth, formatMonthLabel } from "../../../common/lib/date";
 import { percent, round } from "../../../common/lib/math";
 import { DailyReport, DailyReportDocument } from "../daily-report/daily-report-schema";
 import { expenseReportTypes } from "../expense-report/enums/expense-report-type";
@@ -20,6 +20,8 @@ import { InventoryAuditType } from "./types/inventory-audit-type";
 import { inventoryAuditTypes } from "./constants/inventory-audit-types";
 import { ExchangeRateResult, ExchangeRateService } from "./services/exchange-rate.service";
 import { OwnerWithdrawalSummary } from "./types/owner-withdrawal-summary";
+import { FacilityExpense, FacilityExpenseDocument } from "../facility-expense/facility-expense-schema";
+import { FacilityExpenseSummary } from "../facility-expense/facility-expense-summary";
 
 @Injectable()
 export class StatisticsService {
@@ -32,6 +34,8 @@ export class StatisticsService {
         private readonly inventoryAuditModel: Model<InventoryAuditDocument>,
         @InjectModel(OwnerWithdrawal.name)
         private readonly ownerWithdrawalModel: Model<OwnerWithdrawalDocument>,
+        @InjectModel(FacilityExpense.name)
+        private readonly facilityExpenseModel: Model<FacilityExpenseDocument>,
         private readonly exchangeRateService: ExchangeRateService,
     ) {}
 
@@ -45,6 +49,7 @@ export class StatisticsService {
         const selectedPeriodWithdrawals = await this.getOwnerWithdrawals(startOfDay, endOfDay);
         const allTimeWithdrawals = await this.getAllTimeOwnerWithdrawals();
         const exchangeRateInfo = await this.exchangeRateService.getUsdToUahRate();
+        const facilityExpenseSummary = await this.getFacilityExpenseSummary(startOfDay);
 
         const coffeeShopStatistics = this.createCoffeeShopStatistics(
             startOfDay,
@@ -56,6 +61,7 @@ export class StatisticsService {
             selectedPeriodWithdrawals,
             allTimeWithdrawals,
             exchangeRateInfo,
+            facilityExpenseSummary,
         );
 
         return coffeeShopStatistics;
@@ -162,6 +168,33 @@ export class StatisticsService {
         };
 
         return expensesBreakdown;
+    }
+
+    private async getFacilityExpenseSummary(startOfDay: Date) {
+        const period = getStartOfMonth(startOfDay);
+        const facilityExpenses = await this.facilityExpenseModel.find({ period });
+
+        const targetAmount = 20175;
+        const collectedAmount = facilityExpenses.reduce((sum, item) => sum + item.amount, 0);
+        const operationsCount = facilityExpenses.length;
+
+        const progressPercentage = Math.min(100, percent(collectedAmount, targetAmount, 0));
+        const isFullyCollected = collectedAmount >= targetAmount;
+        const remainingAmount = Math.max(0, targetAmount - collectedAmount);
+        const monthLabel = formatMonthLabel(period);
+
+        const facilityExpenseSummary: FacilityExpenseSummary = {
+            targetAmount,
+            collectedAmount,
+            remainingAmount,
+            progressPercentage,
+            isFullyCollected,
+            operationsCount,
+            monthLabel,
+            period,
+        };
+
+        return facilityExpenseSummary;
     }
 
     private buildDailyExpenseItems(dailyExpenses: ExpenseReport[]): ExpenseBreakdownItem[] {
@@ -464,6 +497,7 @@ export class StatisticsService {
         selectedPeriodWithdrawals: OwnerWithdrawal[],
         allTimeWithdrawals: OwnerWithdrawal[],
         exchangeRateInfo: ExchangeRateResult,
+        facilityExpenseSummary: FacilityExpenseSummary,
     ) {
         const aggregatedDaily = this.aggregateDailyReports(dailyReports);
         let totalDailyExpensesAmount = 0;
@@ -537,6 +571,7 @@ export class StatisticsService {
                 allTimeWithdrawals,
                 exchangeRateInfo,
             ),
+            facilityExpense: facilityExpenseSummary,
         };
 
         return coffeeShopStatistics;

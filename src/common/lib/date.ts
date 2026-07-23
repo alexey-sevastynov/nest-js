@@ -11,3 +11,16 @@ export function getEndOfDay(date: Date | string) {
 
     return parsedDate;
 }
+
+export function getStartOfMonth(date: Date | string) {
+    const d = new Date(date);
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1));
+}
+
+export function formatMonthLabel(date: Date, locale = "uk-UA") {
+    const monthName = date.toLocaleString(locale, {
+        month: "long",
+        timeZone: "UTC",
+    });
+    return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${date.getUTCFullYear()}`;
+}

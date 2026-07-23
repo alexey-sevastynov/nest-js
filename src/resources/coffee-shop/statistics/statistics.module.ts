@@ -4,6 +4,7 @@ import { DailyReport, DailyReportSchema } from "../daily-report/daily-report-sch
 import { ExpenseReport, ExpenseReportSchema } from "../expense-report/expense-report-schema";
 import { InventoryAudit, InventoryAuditSchema } from "../inventory-audit/inventory-audit-schema";
 import { OwnerWithdrawal, OwnerWithdrawalSchema } from "../owner-withdrawal/owner-withdrawal-schema";
+import { FacilityExpense, FacilityExpenseSchema } from "../facility-expense/facility-expense-schema";
 import { StatisticsService } from "./statistics.service";
 import { StatisticsController } from "./statistics.controller";
 import { ExchangeRateService } from "./services/exchange-rate.service";
@@ -15,6 +16,7 @@ import { ExchangeRateService } from "./services/exchange-rate.service";
             { name: ExpenseReport.name, schema: ExpenseReportSchema },
             { name: InventoryAudit.name, schema: InventoryAuditSchema },
             { name: OwnerWithdrawal.name, schema: OwnerWithdrawalSchema },
+            { name: FacilityExpense.name, schema: FacilityExpenseSchema },
         ]),
     ],
     controllers: [StatisticsController],
