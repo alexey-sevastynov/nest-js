@@ -36,35 +36,49 @@ export class DailyReportService {
     async createDailyReport(createDailyReportDto: CreateDailyReportDto) {
         const employee = await this.employeeModel.findById(createDailyReportDto.employee);
 
-        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
+        if (!employee) {
+            throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
+        }
 
         const calculatedDailyReportFields = this.getCalculatedDailyReportFields(
             employee,
             createDailyReportDto,
         );
 
-        const dailyReport = new this.dailyModel({
+        const dailyReport = await new this.dailyModel({
             ...createDailyReportDto,
             ...calculatedDailyReportFields,
-        });
+        }).save();
 
-        return dailyReport.save();
+        return this.dailyModel
+            .findById(dailyReport._id)
+            .populate(dailyReportProps.employee)
+            .orFail(() => new NotFoundException(errorMessages.notFound.replace("{0}", DailyReport.name)));
     }
 
     async updateDailyReport(id: string, updateDailyReportDto: UpdateDailyReportDto) {
         const dailyModel = await this.dailyModel.findById(id);
 
-        if (!dailyModel) throw new NotFoundException(errorMessages.notFound.replace("{0}", DailyReport.name));
+        if (!dailyModel) {
+            throw new NotFoundException(errorMessages.notFound.replace("{0}", DailyReport.name));
+        }
 
         Object.assign(dailyModel, updateDailyReportDto);
 
         const employee = await this.employeeModel.findById(dailyModel.employee);
 
-        if (!employee) throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
+        if (!employee) {
+            throw new NotFoundException(errorMessages.notFound.replace("{0}", Employee.name));
+        }
 
         Object.assign(dailyModel, this.getCalculatedDailyReportFields(employee, dailyModel));
 
-        return dailyModel.save();
+        await dailyModel.save();
+
+        return this.dailyModel
+            .findById(id)
+            .populate(dailyReportProps.employee)
+            .orFail(() => new NotFoundException(errorMessages.notFound.replace("{0}", DailyReport.name)));
     }
 
     async deleteDailyReport(id: string) {

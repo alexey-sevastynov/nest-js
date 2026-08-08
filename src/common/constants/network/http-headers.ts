@@ -1,4 +1,4 @@
-export const headers = {
+export const httpHeaders = {
     accept: "Accept",
     acceptCharset: "Accept-Charset",
     acceptEncoding: "Accept-Encoding",

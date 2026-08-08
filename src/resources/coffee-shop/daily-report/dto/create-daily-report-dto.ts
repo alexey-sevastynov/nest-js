@@ -4,22 +4,22 @@ import { Type } from "class-transformer";
 export class CreateDailyReportDto {
     @IsDate()
     @Type(() => Date)
-    date: Date;
+    date!: Date;
 
     @IsNumber()
-    cashRevenue: number;
+    cashRevenue!: number;
 
     @IsNumber()
-    terminalRevenue: number;
+    terminalRevenue!: number;
 
     @IsMongoId()
-    employee: string;
+    employee!: string;
 
     @IsNumber()
-    costOfGoods: number;
+    costOfGoods!: number;
 
     @IsNumber()
-    productWriteOffs: number;
+    productWriteOffs!: number;
 
     @IsOptional()
     @IsNumber()

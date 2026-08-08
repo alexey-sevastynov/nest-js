@@ -7,25 +7,25 @@ export type DailyReportDocument = DailyReport & Document;
 @Schema({ timestamps: true })
 export class DailyReport {
     @Prop({ required: true, unique: true })
-    date: Date;
+    date!: Date;
 
     @Prop({ required: true })
-    cashRevenue: number;
+    cashRevenue!: number;
 
     @Prop({ required: true })
-    terminalRevenue: number;
+    terminalRevenue!: number;
 
     @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
-    employee: Employee;
+    employee!: Employee;
 
     @Prop({ required: true })
-    costOfGoods: number;
+    costOfGoods!: number;
 
     @Prop({ required: true })
-    productWriteOffs: number;
+    productWriteOffs!: number;
 
     @Prop({ default: 0 })
-    employeeBonus: number;
+    employeeBonus!: number;
 
     @Prop()
     employeeTotalSalary?: number;

@@ -15,11 +15,13 @@ import { InventoryAuditModule } from "./resources/coffee-shop/inventory-audit/in
 import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.module";
 import { FacilityExpenseModule } from "./resources/coffee-shop/facility-expense/facility-expense.module";
 import { OwnerWithdrawalModule } from "./resources/coffee-shop/owner-withdrawal/owner-withdrawal.module";
+import { TelegramModule } from "./infra/telegram/telegram.module";
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         DatabaseModule,
+        TelegramModule,
         TaskModule,
         UserModule,
         AddressModule,

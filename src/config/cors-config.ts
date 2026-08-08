@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { type CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
-import { headers } from "../common/constants/network/headers";
+import { httpHeaders } from "../common/constants/network/http-headers";
 import { methods } from "../common/constants/network/methods";
 import { origins } from "../common/constants/network/origins";
 
@@ -14,7 +14,7 @@ const corsMethods = [
     methods.options,
     methods.head,
 ];
-const corsAllowedHeaders = [headers.contentType, headers.authorization];
+const corsAllowedHeaders = [httpHeaders.contentType, httpHeaders.authorization];
 
 export const corsConfig: CorsOptions = {
     origin: corsAllowedOrigins,
@@ -27,10 +27,10 @@ export function serverlessCors(request: Request, response: Response, next: NextF
     const origin = request.headers.origin;
 
     if (origin && isCorsOriginAllowed(origin)) {
-        response.setHeader(headers.accessControlAllowOrigin, origin);
-        response.setHeader(headers.accessControlAllowMethods, corsMethods.join(","));
-        response.setHeader(headers.accessControlAllowHeaders, corsAllowedHeaders.join(","));
-        response.setHeader(headers.accessControlAllowCredentials, "true");
+        response.setHeader(httpHeaders.accessControlAllowOrigin, origin);
+        response.setHeader(httpHeaders.accessControlAllowMethods, corsMethods.join(","));
+        response.setHeader(httpHeaders.accessControlAllowHeaders, corsAllowedHeaders.join(","));
+        response.setHeader(httpHeaders.accessControlAllowCredentials, "true");
     }
 
     if (isPreflightRequest(request.method)) {
