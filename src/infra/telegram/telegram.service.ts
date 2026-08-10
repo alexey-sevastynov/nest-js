@@ -7,8 +7,9 @@ import { getRequiredEnv } from "../../common/utils/infra/env-functions";
 import { methods } from "../../common/constants/network/methods";
 import { httpHeaders } from "../../common/constants/network/http-headers";
 import { contentTypes } from "../../common/constants/network/content-types";
-import { stringifyJSON } from "../../common/utils/json";
+import { parseJSONResponse, stringifyJSON } from "../../common/utils/json";
 import { formatDateToLocalDateTime } from "../../common/utils/date/date";
+import { createRequestTimeout } from "../../common/utils/network/request-signal";
 import { TelegramMessageMapping, TelegramMessageMappingDocument } from "./telegram-message-mapping.schema";
 import { TelegramBotResponse, TelegramMethod } from "./types";
 import {
@@ -66,9 +67,9 @@ export class TelegramService {
     async handleCreate(
         resourceName: string,
         data: Record<string, unknown>,
-        customMessageFn: (data: Record<string, unknown>) => string,
+        customMessageFn: (data: Record<string, unknown>) => string | Promise<string>,
     ) {
-        const messageText = customMessageFn(data);
+        const messageText = await customMessageFn(data);
 
         try {
             const result = await this.sendMessage(this.defaultChatId, messageText);
@@ -100,7 +101,7 @@ export class TelegramService {
         resourceName: string,
         resourceId: string,
         data: Record<string, unknown>,
-        customMessageFn: (data: Record<string, unknown>) => string,
+        customMessageFn: (data: Record<string, unknown>) => string | Promise<string>,
     ) {
         const mapping = await this.mappingModel.findOne({ resourceId });
 
@@ -114,7 +115,7 @@ export class TelegramService {
             return;
         }
 
-        const messageText = `${customMessageFn(data)}\n\n🔄 *Оновлено:* ${formatDateToLocalDateTime()}`;
+        const messageText = `${await customMessageFn(data)}\n\n🔄 *Оновлено:* ${formatDateToLocalDateTime()}`;
 
         try {
             await this.editMessageText(mapping.chatId, mapping.messageId, messageText);
@@ -155,20 +156,33 @@ export class TelegramService {
     }
 
     private async request(method: TelegramMethod, body: Record<string, unknown>) {
-        const response = await fetch(`${this.telegramBotApiUrl}/${method}`, {
-            method: methods.post,
-            headers: {
-                [httpHeaders.contentType]: contentTypes.json,
-            },
-            body: stringifyJSON(body),
-        });
+        const requestTimeout = createRequestTimeout();
 
-        const data = (await response.json()) as TelegramBotResponse;
+        try {
+            const response = await fetch(`${this.telegramBotApiUrl}/${method}`, {
+                method: methods.post,
+                headers: {
+                    [httpHeaders.contentType]: contentTypes.json,
+                },
+                signal: requestTimeout.signal,
+                body: stringifyJSON(body),
+            });
 
-        if (!response.ok || !data.ok) {
-            throw new Error(`${telegramErrorMessages.apiError}: ${JSON.stringify(data)}`);
+            const data = await parseJSONResponse<TelegramBotResponse>(response);
+
+            if (!response.ok || !data.ok) {
+                throw new Error(`${telegramErrorMessages.apiError}: ${JSON.stringify(data)}`);
+            }
+
+            return data;
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+                throw new Error(telegramErrorMessages.requestTimeout);
+            }
+
+            throw error;
+        } finally {
+            requestTimeout.cleanup();
         }
-
-        return data;
     }
 }

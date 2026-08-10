@@ -25,7 +25,7 @@ export class DailyReportController {
     @TelegramNotify({
         resource: "DailyReport",
         action: telegramActions.create,
-        message: formatDailyReportMessage(),
+        messageFactory: formatDailyReportMessage,
     })
     create(@Body() dto: CreateDailyReportDto) {
         return this.service.createDailyReport(dto);
@@ -36,7 +36,7 @@ export class DailyReportController {
     @TelegramNotify({
         resource: "DailyReport",
         action: telegramActions.update,
-        message: formatDailyReportMessage(),
+        messageFactory: formatDailyReportMessage,
     })
     update(@Param("id") id: string, @Body() dto: UpdateDailyReportDto) {
         return this.service.updateDailyReport(id, dto);

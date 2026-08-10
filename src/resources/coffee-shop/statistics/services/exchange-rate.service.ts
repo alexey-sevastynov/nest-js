@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { isNumber } from "../../../../common/utils/guards";
+import { parseJSONResponse } from "../../../../common/utils/json";
 
 export interface ExchangeRateResult {
     rate: number;
@@ -54,7 +55,7 @@ export class ExchangeRateService {
                 return null;
             }
 
-            const data = (await response.json()) as NbuExchangeRateResponse[];
+            const data = await parseJSONResponse<NbuExchangeRateResponse[]>(response);
             const rate = data?.[0]?.rate;
 
             if (!isNumber(rate)) {

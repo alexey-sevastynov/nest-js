@@ -16,6 +16,7 @@ export const envKeys = {
     mailProvider: "MAIL_PROVIDER",
     telegramBotToken: "TELEGRAM_BOT_TOKEN",
     telegramChatId: "TELEGRAM_CHAT_ID",
+    openRouterApiKey: "OPENROUTER_API_KEY",
 } as const;
 
 export type EnvKey = (typeof envKeys)[keyof typeof envKeys];

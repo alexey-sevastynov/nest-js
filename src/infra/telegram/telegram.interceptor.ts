@@ -1,11 +1,12 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from "@nestjs/common";
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger, Optional } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { tap } from "rxjs/operators";
+import { concatMap } from "rxjs/operators";
 import { Reflector } from "@nestjs/core";
+import { AiService } from "../ai/ai.service";
 import { telegramNotifyMetadata } from "./telegram.decorator";
 import { TelegramService } from "./telegram.service";
 import { telegramActions } from "./constants";
-import { TelegramNotifyOptions } from "./types";
+import { type TelegramNotifyOptions } from "./types";
 
 interface ExpressRequest {
     params: Record<string, string>;
@@ -20,6 +21,7 @@ export class TelegramInterceptor implements NestInterceptor<unknown, unknown> {
     constructor(
         private readonly reflector: Reflector,
         private readonly telegramService: TelegramService,
+        @Optional() private readonly aiService: AiService,
     ) {}
 
     intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
@@ -33,15 +35,33 @@ export class TelegramInterceptor implements NestInterceptor<unknown, unknown> {
         const request = context.switchToHttp().getRequest<ExpressRequest>();
 
         return next.handle().pipe(
-            tap({
-                next: (response) => {
-                    const responseObj = response as Record<string, unknown> | null;
-                    this.handleNotification(options, request, responseObj).catch((err) => {
-                        this.logger.error("Failed to send Telegram notification", err);
-                    });
-                },
+            concatMap(async (response) => {
+                const responseObj = response as Record<string, unknown> | null;
+                try {
+                    await this.handleNotification(options, request, responseObj);
+                } catch (err) {
+                    this.logger.error("Failed to send Telegram notification", err);
+                }
+
+                return response;
             }),
         );
+    }
+
+    private resolveMessageFn(options: TelegramNotifyOptions) {
+        if ("messageFactory" in options && options.messageFactory) {
+            if (!this.aiService) {
+                throw new Error("AiService is required for messageFactory but was not injected");
+            }
+
+            return options.messageFactory(this.aiService);
+        }
+
+        if ("message" in options && options.message) {
+            return options.message;
+        }
+
+        throw new Error(`No message or messageFactory found for resource: ${options.resource}`);
     }
 
     private async handleNotification(
@@ -55,10 +75,12 @@ export class TelegramInterceptor implements NestInterceptor<unknown, unknown> {
 
         if (options.action === telegramActions.create) {
             if (!data) return;
-            await this.telegramService.handleCreate(options.resource, data, options.message);
+            const messageFn = this.resolveMessageFn(options);
+            await this.telegramService.handleCreate(options.resource, data, messageFn);
         } else if (options.action === telegramActions.update) {
             if (!resourceId) return;
-            await this.telegramService.handleUpdate(options.resource, resourceId, data, options.message);
+            const messageFn = this.resolveMessageFn(options);
+            await this.telegramService.handleUpdate(options.resource, resourceId, data, messageFn);
         } else if (options.action === telegramActions.delete) {
             if (!resourceId) return;
             await this.telegramService.handleDelete(String(resourceId));

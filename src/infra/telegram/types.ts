@@ -1,7 +1,11 @@
+import { type AiService } from "../ai/ai.service";
 import { type telegramMethods, type telegramActions } from "./constants";
 
 export type TelegramAction = (typeof telegramActions)[keyof typeof telegramActions];
 export type TelegramMethod = (typeof telegramMethods)[keyof typeof telegramMethods];
+
+export type MessageFn<T = Record<string, unknown>> = (data: T) => string | Promise<string>;
+export type MessageFactory<T = Record<string, unknown>> = (aiService: AiService) => MessageFn<T>;
 
 export interface TelegramBotResponse {
     ok: boolean;
@@ -10,7 +14,8 @@ export interface TelegramBotResponse {
 }
 
 export type TelegramNotifyOptions<T = Record<string, unknown>> =
-    | TelegramNotifyMessageOptions<T>
+    | TelegramNotifyWithMessage<T>
+    | TelegramNotifyWithFactory<T>
     | TelegramNotifyDeleteOptions;
 
 interface WithAdditionalProperties {
@@ -30,9 +35,16 @@ interface TelegramNotifyBaseOptions {
     resource: string;
 }
 
-interface TelegramNotifyMessageOptions<T> extends TelegramNotifyBaseOptions {
+interface TelegramNotifyWithMessage<T> extends TelegramNotifyBaseOptions {
     action: typeof telegramActions.create | typeof telegramActions.update;
-    message: (data: T) => string;
+    message: MessageFn<T>;
+    messageFactory?: never;
+}
+
+interface TelegramNotifyWithFactory<T> extends TelegramNotifyBaseOptions {
+    action: typeof telegramActions.create | typeof telegramActions.update;
+    message?: never;
+    messageFactory: MessageFactory<T>;
 }
 
 interface TelegramNotifyDeleteOptions extends TelegramNotifyBaseOptions {

@@ -5,3 +5,7 @@ export function parseJSON<T = unknown>(value: string) {
 export function stringifyJSON<T = unknown>(value: T) {
     return JSON.stringify(value);
 }
+
+export async function parseJSONResponse<T = unknown>(response: Response) {
+    return response.json() as Promise<T>;
+}

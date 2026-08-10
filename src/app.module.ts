@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseModule } from "./infra/database/database.module";
+import { AiModule } from "./infra/ai/ai.module";
 import { TaskModule } from "./resources/task/task.module";
 import { UserModule } from "./resources/user/user.module";
 import { AddressModule } from "./resources/address/address.module";
@@ -21,6 +22,7 @@ import { TelegramModule } from "./infra/telegram/telegram.module";
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         DatabaseModule,
+        AiModule,
         TelegramModule,
         TaskModule,
         UserModule,

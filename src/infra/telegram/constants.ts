@@ -30,6 +30,7 @@ export const telegramWarningMessages = {
 
 export const telegramErrorMessages = {
     apiError: "Telegram API Error",
+    requestTimeout: "Telegram API request timed out",
     createNotification: "Error sending create notification for {0}",
     updateNotification: "Error updating Telegram message for {0} with ID {1}",
     deleteNotification: "Error deleting Telegram message for resource ID {0}",
