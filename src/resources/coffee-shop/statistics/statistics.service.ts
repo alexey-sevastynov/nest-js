@@ -313,6 +313,13 @@ export class StatisticsService {
                     basicSalary: 0,
                     bonuses: 0,
                     totalSalary: 0,
+                    averageRevenuePerShift: 0,
+                    averageCashRevenuePercent: 0,
+                    averageTerminalRevenuePercent: 0,
+                    averageNetProfit: 0,
+                    averageCostPercent: 0,
+                    averageWriteOffPercent: 0,
+                    averageSalaryPercent: 0,
                 };
             }
 
@@ -321,6 +328,27 @@ export class StatisticsService {
             employeeStats[employeeId].totalSalary += report.employeeTotalSalary || 0;
             employeeStats[employeeId].basicSalary +=
                 (report.employeeTotalSalary || 0) - (report.employeeBonus || 0);
+            employeeStats[employeeId].averageRevenuePerShift += report.totalRevenue ?? 0;
+            employeeStats[employeeId].averageCashRevenuePercent += report.cashPercent ?? 0;
+            employeeStats[employeeId].averageTerminalRevenuePercent += report.terminalPercent ?? 0;
+            employeeStats[employeeId].averageNetProfit += report.netProfit ?? 0;
+            employeeStats[employeeId].averageCostPercent += report.costPercent ?? 0;
+            employeeStats[employeeId].averageWriteOffPercent += report.writeOffPercent ?? 0;
+            employeeStats[employeeId].averageSalaryPercent += report.salaryPercent ?? 0;
+        }
+
+        for (const stats of Object.values(employeeStats)) {
+            if (stats.shifts > 0) {
+                stats.averageRevenuePerShift = round(stats.averageRevenuePerShift / stats.shifts);
+                stats.averageCashRevenuePercent = round(stats.averageCashRevenuePercent / stats.shifts);
+                stats.averageTerminalRevenuePercent = round(
+                    stats.averageTerminalRevenuePercent / stats.shifts,
+                );
+                stats.averageNetProfit = round(stats.averageNetProfit / stats.shifts);
+                stats.averageCostPercent = round(stats.averageCostPercent / stats.shifts);
+                stats.averageWriteOffPercent = round(stats.averageWriteOffPercent / stats.shifts);
+                stats.averageSalaryPercent = round(stats.averageSalaryPercent / stats.shifts);
+            }
         }
 
         return {
