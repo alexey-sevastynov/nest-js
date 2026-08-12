@@ -13,6 +13,7 @@ import { EmployeeStats } from "./types/employee-stats";
 import { InventoryAuditBreakdownItem } from "./types/inventory-audit-breakdown-item";
 import { InventoryAuditTotals } from "./types/inventory-audit-totals";
 import { CoffeeShopStatistics } from "./types/statistic-coffee-shop";
+import { StatisticsHighlights, MetricHighlight } from "./types/statistics-highlights";
 import { StatisticsPercentages } from "./types/statistics-percentages";
 import { ExpensesBreakdown } from "./types/expenses-breakdown";
 import { ExpenseBreakdownItem } from "./types/expense-breakdown-item";
@@ -515,6 +516,57 @@ export class StatisticsService {
         return ownerWithdrawalSummary;
     }
 
+    private calculateStatisticsHighlights(dailyReports: DailyReport[]) {
+        if (!dailyReports || dailyReports.length <= 1) return undefined;
+
+        const statisticsHighlights: StatisticsHighlights = {
+            revenue: this.findMetricHighlight(dailyReports, (report) => report.totalRevenue ?? 0),
+            netProfit: this.findMetricHighlight(dailyReports, (report) => report.netProfit ?? 0),
+            costPercent: this.findMetricHighlight(dailyReports, (report) => report.costPercent ?? 0),
+            writeOffPercent: this.findMetricHighlight(dailyReports, (report) => report.writeOffPercent ?? 0),
+            cashRevenue: this.findMetricHighlight(dailyReports, (report) => report.cashRevenue ?? 0),
+            terminalRevenue: this.findMetricHighlight(dailyReports, (report) => report.terminalRevenue ?? 0),
+        };
+
+        return statisticsHighlights;
+    }
+
+    private findMetricHighlight(reports: DailyReport[], getValue: (report: DailyReport) => number) {
+        let maxReport = reports[0];
+        let minReport = reports[0];
+        let maxValue = getValue(reports[0]);
+        let minValue = getValue(reports[0]);
+
+        for (const report of reports) {
+            const value = getValue(report);
+
+            if (value > maxValue) {
+                maxValue = value;
+                maxReport = report;
+            }
+
+            if (value < minValue) {
+                minValue = value;
+                minReport = report;
+            }
+        }
+
+        const metricHighlight: MetricHighlight = {
+            max: {
+                date: maxReport.date,
+                value: round(maxValue),
+                employeeName: maxReport.employee.name,
+            },
+            min: {
+                date: minReport.date,
+                value: round(minValue),
+                employeeName: minReport.employee.name,
+            },
+        };
+
+        return metricHighlight;
+    }
+
     private createCoffeeShopStatistics(
         startOfDay: Date,
         endOfDay: Date,
@@ -600,6 +652,7 @@ export class StatisticsService {
                 exchangeRateInfo,
             ),
             facilityExpense: facilityExpenseSummary,
+            highlights: this.calculateStatisticsHighlights(dailyReports),
         };
 
         return coffeeShopStatistics;
