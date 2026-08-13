@@ -17,6 +17,7 @@ import { StatisticsModule } from "./resources/coffee-shop/statistics/statistics.
 import { FacilityExpenseModule } from "./resources/coffee-shop/facility-expense/facility-expense.module";
 import { OwnerWithdrawalModule } from "./resources/coffee-shop/owner-withdrawal/owner-withdrawal.module";
 import { TelegramModule } from "./infra/telegram/telegram.module";
+import { KavappInventoryModule } from "./resources/coffee-shop/kavapp-inventory/kavapp-inventory.module";
 
 @Module({
     imports: [
@@ -36,6 +37,7 @@ import { TelegramModule } from "./infra/telegram/telegram.module";
         StatisticsModule,
         FacilityExpenseModule,
         OwnerWithdrawalModule,
+        KavappInventoryModule,
     ],
     controllers: [AppController],
     providers: [AppService],
