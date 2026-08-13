@@ -96,7 +96,12 @@ export class AuthService {
         isVerified = false,
         userRole: UserRoleKey,
     ) {
-        const token = this.jwtService.sign({ id: mongoId });
+        const isGuest = userRole === userRoleKeys.guest;
+        const mongoIdString = String(mongoId);
+        const tokenPayload = isGuest
+            ? { id: mongoIdString, userRole, isGuest: true, userId, userName }
+            : { id: mongoIdString };
+        const token = this.jwtService.sign(tokenPayload);
         const response: AuthResponse = { token, userId, userName, isVerified, userRole };
 
         return response;

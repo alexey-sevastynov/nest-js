@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Delete, Body, Param, Patch, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Roles } from "../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
 import { OwnerWithdrawalService } from "./owner-withdrawal.service";
 import { CreateOwnerWithdrawalDto } from "./dto/create-owner-withdrawal-dto";
 import { UpdateOwnerWithdrawalDto } from "./dto/update-owner-withdrawal-dto";
 
+@Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/owner-withdrawals")
 export class OwnerWithdrawalController {
     constructor(private readonly service: OwnerWithdrawalService) {}

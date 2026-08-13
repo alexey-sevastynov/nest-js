@@ -10,10 +10,13 @@ import {
     UsePipes,
     ValidationPipe,
 } from "@nestjs/common";
+import { Roles } from "../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../common/auth/constants/authorized-roles";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user-dto";
 import { UpdateUserDto } from "./dto/update-user-dto";
 
+@Roles(...authorizedRoles.adminOnly)
 @Controller("users")
 export class UserController {
     constructor(private readonly userService: UserService) {}
