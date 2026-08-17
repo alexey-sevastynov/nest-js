@@ -3,7 +3,7 @@ import { KavappInventoryResponse } from "../../../integrations/kavapp/types/inve
 import { KavappInventoryService } from "./services/kavapp-inventory.service";
 import { KavappSyncService } from "./services/kavapp-sync.service";
 
-@Controller("kavapp")
+@Controller("coffee-shop/kavapp")
 export class KavappInventoryController {
     constructor(
         private readonly kavappInventoryService: KavappInventoryService,

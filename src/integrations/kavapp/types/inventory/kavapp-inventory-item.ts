@@ -5,12 +5,12 @@ export interface KavappInventoryItem {
     type: string;
     itemcount: number;
     units: string;
-    itemPrice: string;
-    itemsCost: string;
+    itemPrice: number;
+    itemsCost: number;
     id?: string;
     itemid?: string;
     unitsName?: string;
     orderid?: string;
-    salePrice?: string;
-    saleCost?: string;
+    salePrice?: number;
+    saleCost?: number;
 }

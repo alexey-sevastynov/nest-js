@@ -19,3 +19,11 @@ export function formatNumber(value: number, decimals = 0) {
 
     return numberFormatter.format(value);
 }
+
+export function toNumber(value: string | number | undefined) {
+    if (value === undefined || value === "") return undefined;
+
+    const result = Number(value);
+
+    return Number.isFinite(result) ? result : undefined;
+}

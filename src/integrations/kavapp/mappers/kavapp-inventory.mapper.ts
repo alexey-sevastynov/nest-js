@@ -1,8 +1,16 @@
+import { toNumber } from "../../../common/utils/number";
+import { type KavappInventoryItem } from "../types/inventory/kavapp-inventory-item";
 import type { KavappInventoryResponse } from "../types/inventory/kavapp-inventory-response";
 
 export class KavappInventoryMapper {
-    static mapItem<T>(item: T): T {
-        return item;
+    static mapItem<T extends KavappInventoryItem>(item: T): T {
+        return {
+            ...item,
+            itemPrice: toNumber(item.itemPrice),
+            itemsCost: toNumber(item.itemsCost),
+            salePrice: toNumber(item.salePrice),
+            saleCost: toNumber(item.saleCost),
+        };
     }
 
     static map(response: KavappInventoryResponse): KavappInventoryResponse {
