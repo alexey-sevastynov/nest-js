@@ -5,6 +5,7 @@ export const dateFormatStrings = {
     iso: "yyyy-MM-dd",
     isoDateTime: "yyyy-MM-dd'T'HH:mm:ss",
     month: "LLLL yyyy",
+    longWithWeekDay: "EEEE, dd MMMM yyyy",
 } as const;
 
 export const timeZones = {

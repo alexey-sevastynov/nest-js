@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { formatPercent } from "../../../common/utils/number";
 import { formatUah } from "../../../common/utils/currency";
-import { formatDateToLongDate } from "../../../common/utils/date/date";
+import { formatDateToLongWithWeekDay } from "../../../common/utils/date/date";
 import { timing } from "../../../common/constants/timing";
 import { type AiService } from "../../../infra/ai/ai.service";
 import { type DailyReport } from "./daily-report-schema";
@@ -9,7 +9,7 @@ import { type DailyReport } from "./daily-report-schema";
 const logger = new Logger("DailyReportTelegram");
 
 function buildFallbackMessage(data: DailyReport): string {
-    return `📅 *Щоденний звіт за ${formatDateToLongDate(data.date)}*
+    return `📅 *Щоденний звіт за ${formatDateToLongWithWeekDay(data.date)}*
 
 Працівник зміни: *${data.employee.name}*.
 
@@ -23,7 +23,7 @@ function buildFallbackMessage(data: DailyReport): string {
 }
 
 function buildDailyReportPrompt(data: DailyReport): string {
-    const date = formatDateToLongDate(data.date);
+    const date = formatDateToLongWithWeekDay(data.date);
 
     return `Ти — фінансовий аналітик та копірайтер кав'ярні.
 Підготуй короткий щоденний фінансовий звіт українською мовою для власника кав'ярні.

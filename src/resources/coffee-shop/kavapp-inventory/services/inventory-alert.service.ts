@@ -6,7 +6,7 @@ import { TelegramService } from "../../../../infra/telegram/telegram.service";
 import { KavappInventoryItem } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-item";
 import { KavappInventoryResponse } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-response";
 import { KavappInventory } from "../kavapp-inventory-schema";
-import { inventoryAlertRules } from "../constants/inventory-aler-rules";
+import { inventoryAlertIgnoreNames, inventoryAlertRules } from "../constants/inventory-aler-rules";
 import { InventoryAlertRule } from "../types/inventory-alert-rule";
 
 @Injectable()
@@ -104,7 +104,7 @@ export class InventoryAlertService {
     }
 
     private getItemAlertState(name: string, quantity: number): "NONE" | "LOW_STOCK" | "NEGATIVE" {
-        if (name === "Кава/Вода") return "NONE";
+        if (inventoryAlertIgnoreNames.has(name)) return "NONE";
 
         if (quantity < 0) return "NEGATIVE";
 

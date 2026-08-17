@@ -24,6 +24,10 @@ export function formatDateToLongDate(date: unknown) {
     return formatDate(date, dateFormatStrings.long);
 }
 
+export function formatDateToLongWithWeekDay(date: unknown) {
+    return formatDate(date, dateFormatStrings.longWithWeekDay);
+}
+
 export function formatDateToDateTime(date: unknown) {
     return formatDate(date, dateFormatStrings.dateTime);
 }

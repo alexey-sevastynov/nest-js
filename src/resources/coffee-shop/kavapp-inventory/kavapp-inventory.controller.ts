@@ -5,7 +5,6 @@ import { KavappInventoryResponse } from "../../../integrations/kavapp/types/inve
 import { KavappInventoryService } from "./services/kavapp-inventory.service";
 import { KavappSyncService } from "./services/kavapp-sync.service";
 
-@Controller("coffee-shop/kavapp")
 @Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/kavapp")
 export class KavappInventoryController {
