@@ -1,8 +1,12 @@
 import { Controller, Get, Post, Query, ParseIntPipe, DefaultValuePipe } from "@nestjs/common";
+import { Roles } from "../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
 import { KavappInventoryResponse } from "../../../integrations/kavapp/types/inventory/kavapp-inventory-response";
 import { KavappInventoryService } from "./services/kavapp-inventory.service";
 import { KavappSyncService } from "./services/kavapp-sync.service";
 
+@Controller("coffee-shop/kavapp")
+@Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/kavapp")
 export class KavappInventoryController {
     constructor(

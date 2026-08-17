@@ -1,11 +1,14 @@
 import { Controller, Get, Post, Delete, Body, Param, UsePipes, ValidationPipe, Patch } from "@nestjs/common";
 import { TelegramNotify } from "../../../infra/telegram/telegram.decorator";
 import { telegramActions } from "../../../infra/telegram/constants";
+import { Roles } from "../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
 import { DailyReportService } from "./daily-report.service";
 import { CreateDailyReportDto } from "./dto/create-daily-report-dto";
 import { UpdateDailyReportDto } from "./dto/update-daily-report-dto";
 import { formatDailyReportMessage } from "./daily-report-telegram";
 
+@Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/daily-reports")
 export class DailyReportController {
     constructor(private readonly service: DailyReportService) {}

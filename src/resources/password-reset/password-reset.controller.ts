@@ -1,7 +1,9 @@
 import { Controller, Post, Body } from "@nestjs/common";
+import { PublicRoute } from "../../common/auth/decorators/public-route.decorator";
 import { PasswordResetService } from "./password-reset.service";
 import { RequestResetDto, ResetPasswordDto } from "./dto/password-reset-dto";
 
+@PublicRoute()
 @Controller("password-reset")
 export class PasswordResetController {
     constructor(private readonly passwordResetService: PasswordResetService) {}

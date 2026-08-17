@@ -1,7 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import { Roles } from "../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../common/auth/constants/authorized-roles";
 import { AddressService } from "./address.service";
 import { CreateAddressDto } from "./dto/create-address-dto";
 
+@Roles(...authorizedRoles.registeredUser)
 @Controller("addresses")
 export class AddressController {
     constructor(private readonly addressService: AddressService) {}

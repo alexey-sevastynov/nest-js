@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Delete, Body, Param, Patch, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Roles } from "../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
 import { InventoryAuditService } from "./inventory-audit.service";
 import { CreateInventoryAuditDto } from "./dto/create-inventory-audit-dto";
 import { UpdateInventoryAuditDto } from "./dto/update-inventory-audit-dto";
 
+@Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/inventory-audits")
 export class InventoryAuditController {
     constructor(private readonly service: InventoryAuditService) {}

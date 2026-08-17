@@ -4,11 +4,13 @@ import { MailVerificationService } from "./mail-verification.service";
 import { setCookie } from "../../common/utils/cookie/cookies";
 import { cookieKeys } from "../../common/utils/cookie/cookie-key";
 import { errorMessages } from "../../common/constants/error-messages";
+import { PublicRoute } from "../../common/auth/decorators/public-route.decorator";
 
 @Controller("mail-verification")
 export class MailVerificationController {
     constructor(private readonly mailService: MailVerificationService) {}
 
+    @PublicRoute()
     @Post("confirm")
     async confirm(@Body("token") token: string, @Res() response: Response) {
         const isValid = await this.mailService.confirmToken(token);

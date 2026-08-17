@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Delete, Body, Param, Patch, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Roles } from "../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
 import { FacilityExpenseService } from "./facility-expense.service";
 import { CreateFacilityExpenseDto } from "./dto/create-facility-expense-dto";
 import { UpdateFacilityExpenseDto } from "./dto/update-facility-expense-dto";
 
+@Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/facility-expenses")
 export class FacilityExpenseController {
     constructor(private readonly service: FacilityExpenseService) {}
