@@ -6,165 +6,164 @@ import { TelegramService } from "../../../../infra/telegram/telegram.service";
 import { KavappInventoryItem } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-item";
 import { KavappInventoryResponse } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-response";
 import { KavappInventory } from "../kavapp-inventory-schema";
-import { inventoryAlertIgnoreNames, inventoryAlertRules } from "../constants/inventory-aler-rules";
-import { InventoryAlertRule } from "../types/inventory-alert-rule";
+import { InventoryAlertRuleDocument } from "../inventory-alert-rule-schema";
+import { InventoryAlertRuleService } from "./inventory-alert-rule.service";
+import { inventoryAlertIgnoreNames } from "../constants/inventory-alert-rules";
+
+type AlertState = "NONE" | "LOW_STOCK" | "NEGATIVE";
+type Alert = { item: KavappInventoryItem; rule?: InventoryAlertRuleDocument };
 
 @Injectable()
 export class InventoryAlertService {
-    constructor(private readonly telegramService: TelegramService) {}
+    constructor(
+        private readonly telegramService: TelegramService,
+        private readonly ruleService: InventoryAlertRuleService,
+    ) {}
 
     async checkAndNotify(
-        kavappInventoryResponse: KavappInventoryResponse,
+        inventory: KavappInventoryResponse,
         previousSnapshot: KavappInventory | null,
         forceTest = false,
-    ) {
-        const chatId = getRequiredEnv(envKeys.telegramChatId);
+    ): Promise<void> {
+        const rules = await this.ruleService.getRules();
+        const rulesByKey = new Map(
+            rules.map((rule) => [this.ruleKey(rule.itemType, rule.kavappItemId), rule]),
+        );
+        const rulesByName = new Map(rules.map((rule) => [this.normalizeName(rule.name), rule]));
+        const currentItems = this.getAllItems(inventory);
+        const previousItems = previousSnapshot ? this.getAllItems(previousSnapshot) : [];
+        const previousStates = new Map<string, AlertState>();
 
-        if (forceTest) {
-            const currentItems = this.getAllItems(kavappInventoryResponse);
-            const negativeAlerts: KavappInventoryItem[] = [];
-            const lowStockAlerts: { item: KavappInventoryItem; rule: InventoryAlertRule }[] = [];
+        for (const item of previousItems) {
+            const rule = this.findRule(item, rulesByKey, rulesByName);
+            if (!rule) continue;
 
-            for (const item of currentItems) {
-                const currentState = this.getItemAlertState(item.name, item.itemcount);
+            const ruleChangedAt = Math.max(
+                rule.createdAt?.getTime?.() ?? 0,
+                rule.updatedAt?.getTime?.() ?? 0,
+            );
+            const previousSyncDate = previousSnapshot?.syncDate?.getTime?.() ?? 0;
 
-                if (currentState === "NEGATIVE") {
-                    negativeAlerts.push(item);
-                } else if (currentState === "LOW_STOCK") {
-                    const rule = inventoryAlertRules.find((r) => r.name === item.name);
-                    if (rule) {
-                        lowStockAlerts.push({ item, rule });
-                    }
-                }
-            }
+            if (ruleChangedAt > previousSyncDate) continue;
 
-            let messageText = "";
-
-            if (negativeAlerts.length === 0 && lowStockAlerts.length === 0) {
-                const dateStr = formatDateFns(new Date(), "dd.MM.yyyy HH:mm");
-                messageText = `📦 *Контроль залишків (ТЕСТ)*\n${dateStr}\n\n✅ Усі залишки v нормі. Критичних відхилень чи низьких запасів не виявлено.`;
-            } else {
-                messageText = this.formatAlertMessage(negativeAlerts, lowStockAlerts);
-                messageText = messageText.replace("📦 *Контроль залишків*", "📦 *Контроль залишків (ТЕСТ)*");
-            }
-
-            await this.telegramService.sendMessage(chatId, messageText);
-
-            return;
+            previousStates.set(this.itemKey(item), this.getState(this.toQuantity(item.itemcount), rule));
         }
 
-        const currentItems = this.getAllItems(kavappInventoryResponse);
-        const prevItems = previousSnapshot ? this.getAllItems(previousSnapshot) : [];
-
-        const prevStatesMap = new Map<string, "NONE" | "LOW_STOCK" | "NEGATIVE">();
-
-        for (const item of prevItems) {
-            prevStatesMap.set(item.name, this.getItemAlertState(item.name, item.itemcount));
-        }
-
-        const negativeAlerts: KavappInventoryItem[] = [];
-        const lowStockAlerts: { item: KavappInventoryItem; rule: InventoryAlertRule }[] = [];
-        let hasNewAlert = false;
+        const negativeAlerts: Alert[] = [];
+        const lowStockAlerts: Alert[] = [];
+        let hasNewAlert = forceTest;
 
         for (const item of currentItems) {
-            const currentState = this.getItemAlertState(item.name, item.itemcount);
-            const prevState = prevStatesMap.get(item.name) || "NONE";
+            const rule = this.findRule(item, rulesByKey, rulesByName);
+            const currentState = this.getState(this.toQuantity(item.itemcount), rule);
 
-            if (
-                (prevState === "NONE" && (currentState === "LOW_STOCK" || currentState === "NEGATIVE")) ||
-                (prevState === "LOW_STOCK" && currentState === "NEGATIVE")
-            ) {
+            if (currentState === "NEGATIVE" && !inventoryAlertIgnoreNames.has(item.name)) {
+                negativeAlerts.push({ item, rule });
                 hasNewAlert = true;
             }
 
-            if (currentState === "NEGATIVE") {
-                negativeAlerts.push(item);
-            } else if (currentState === "LOW_STOCK") {
-                const rule = inventoryAlertRules.find((r) => r.name === item.name);
-                if (rule) {
-                    lowStockAlerts.push({ item, rule });
-                }
-            }
+            if (!rule) continue;
+            const previousState = previousStates.get(this.itemKey(item)) ?? "NONE";
+            if (currentState === "LOW_STOCK") lowStockAlerts.push({ item, rule });
+            if (
+                !forceTest &&
+                ((previousState === "NONE" && currentState !== "NONE") ||
+                    (previousState === "LOW_STOCK" && currentState === "NEGATIVE"))
+            )
+                hasNewAlert = true;
         }
 
-        if (!hasNewAlert) return;
-
-        const messageText = this.formatAlertMessage(negativeAlerts, lowStockAlerts);
-
-        await this.telegramService.sendMessage(chatId, messageText);
+        if (!forceTest && !hasNewAlert) return;
+        const message =
+            negativeAlerts.length || lowStockAlerts.length
+                ? this.formatAlertMessage(negativeAlerts, lowStockAlerts, forceTest)
+                : this.formatEmptyMessage(forceTest);
+        await this.telegramService.sendMessage(getRequiredEnv(envKeys.telegramChatId), message);
     }
 
-    private getAllItems(inventory: KavappInventoryResponse): KavappInventoryItem[] {
+    private getAllItems(inventory: KavappInventoryResponse | KavappInventory): KavappInventoryItem[] {
         return [
-            ...(inventory.cup || []),
-            ...(inventory.ingredient || []),
-            ...(inventory.product || []),
-            ...(inventory.kitchen || []),
+            ...(inventory.cup ?? []).map((item) => ({ ...item, type: "cup" })),
+            ...(inventory.ingredient ?? []).map((item) => ({ ...item, type: "ingredient" })),
+            ...(inventory.product ?? []).map((item) => ({ ...item, type: "product" })),
+            ...(inventory.kitchen ?? []).map((item) => ({ ...item, type: "kitchen" })),
         ];
     }
 
-    private getItemAlertState(name: string, quantity: number): "NONE" | "LOW_STOCK" | "NEGATIVE" {
-        if (inventoryAlertIgnoreNames.has(name)) return "NONE";
+    private findRule(
+        item: KavappInventoryItem,
+        byKey: Map<string, InventoryAlertRuleDocument>,
+        byName: Map<string, InventoryAlertRuleDocument>,
+    ): InventoryAlertRuleDocument | undefined {
+        const type = item.type as InventoryAlertRuleDocument["itemType"];
+        const ids = [item.itemid, item.id].filter((id): id is string => Boolean(id));
 
+        for (const id of ids) {
+            const rule = byKey.get(this.ruleKey(type, id));
+
+            if (rule) return rule;
+        }
+
+        return byName.get(this.normalizeName(item.name));
+    }
+
+    private normalizeName(value: unknown): string {
+        return this.toText(value).normalize("NFKC").replace(/\s+/g, " ").trim().toLocaleLowerCase("uk-UA");
+    }
+
+    private toQuantity(value: unknown): number {
+        if (typeof value === "number") return value;
+
+        const quantity = Number(this.toText(value).trim().replace(/[−–—]/g, "-").replace(",", "."));
+
+        return Number.isFinite(quantity) ? quantity : 0;
+    }
+
+    private toText(value: unknown): string {
+        return typeof value === "string" || typeof value === "number" ? String(value) : "";
+    }
+
+    private getState(quantity: number, rule?: InventoryAlertRuleDocument): AlertState {
         if (quantity < 0) return "NEGATIVE";
-
-        const rule = inventoryAlertRules.find((r) => r.name === name);
-
-        if (rule && quantity <= rule.threshold) return "LOW_STOCK";
-
-        return "NONE";
+        return rule && quantity <= rule.threshold ? "LOW_STOCK" : "NONE";
     }
 
-    private getItemUnit(item: KavappInventoryItem) {
-        if (item.unitsName) return item.unitsName;
-
-        if (item.units === "1") return "шт.";
-
-        if (item.units === "2") return "г";
-
-        return item.units || "";
+    private itemKey(item: KavappInventoryItem): string {
+        return `${item.type}:${item.itemid ?? item.id ?? item.name}`;
+    }
+    private ruleKey(type: string, id: string): string {
+        return `${type}:${id}`;
     }
 
-    private formatAlertMessage(
-        negativeAlerts: KavappInventoryItem[],
-        lowStockAlerts: { item: KavappInventoryItem; rule: InventoryAlertRule }[],
-    ): string {
-        const dateStr = formatDateFns(new Date(), "dd.MM.yyyy HH:mm");
-        let msg = `📦 *Контроль залишків*\n${dateStr}\n`;
+    private getItemUnit(item: KavappInventoryItem, rule?: InventoryAlertRuleDocument): string {
+        return (
+            item.unitsName ??
+            (item.units === "1" ? "шт." : item.units === "2" ? "г" : item.units || rule?.unit || "")
+        );
+    }
 
-        if (negativeAlerts.length > 0) {
-            msg += `\n🚨 *Від’ємні залишки*\n\n`;
-
-            for (const item of negativeAlerts) {
-                msg += `• ${item.name} — ${this.formatNumberUa(item.itemcount)} ${this.getItemUnit(item)}\n`;
+    private formatAlertMessage(negative: Alert[], lowStock: Alert[], test: boolean): string {
+        let message = `📦 *Контроль залишків${test ? " (ТЕСТ)" : ""}*\n${formatDateFns(new Date(), "dd.MM.yyyy HH:mm")}\n`;
+        if (negative.length) {
+            message += "\n🚨 *Від’ємні залишки*\n\n";
+            for (const { item, rule } of negative)
+                message += `• ${item.name} — ${this.formatNumberUa(item.itemcount)} ${this.getItemUnit(item, rule)}\n`;
+        }
+        if (lowStock.length) {
+            message += "\n⚠️ *Потрібно поповнити*\n\n";
+            for (const { item, rule } of lowStock) {
+                message += `• ${item.name} — ${this.formatNumberUa(item.itemcount)} ${this.getItemUnit(item, rule)}\n`;
+                if (rule?.description) message += `  ${rule.description}\n`;
             }
         }
-
-        if (lowStockAlerts.length > 0) {
-            msg += `\n⚠️ *Потрібно поповнити*\n\n`;
-
-            for (const alert of lowStockAlerts) {
-                const { item, rule } = alert;
-                const customMsg = rule.message || "Потрібно поповнити запас.";
-                msg += `• ${item.name} — ${this.formatNumberUa(item.itemcount)} ${this.getItemUnit(item)}\n  ${customMsg}\n\n`;
-            }
-            msg = msg.trim() + "\n";
-        }
-
-        return msg.trim();
+        return message.trim();
     }
 
-    private formatNumberUa(num: number): string {
-        const isNegative = num < 0;
-        const absoluteValue = Math.abs(num);
+    private formatEmptyMessage(test: boolean): string {
+        return `📦 *Контроль залишків${test ? " (ТЕСТ)" : ""}*\n${formatDateFns(new Date(), "dd.MM.yyyy HH:mm")}\n\n✅ Усі залишки в нормі.`;
+    }
 
-        let formatted = absoluteValue.toLocaleString("uk-UA", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 3,
-        });
-
-        formatted = formatted.replace(/\u00A0/g, " ");
-
-        return isNegative ? `−${formatted}` : formatted;
+    private formatNumberUa(value: number): string {
+        return value.toLocaleString("uk-UA", { maximumFractionDigits: 3 }).replace(/\u00A0/g, " ");
     }
 }

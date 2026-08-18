@@ -1,4 +1,4 @@
-import type { KavappInventoryItem } from "./kavapp-inventory-item";
+import type { KavappCatalogItem, KavappInventoryItem } from "./kavapp-inventory-item";
 
 export interface KavappInventoryResponse {
     cup: KavappInventoryItem[];
@@ -6,3 +6,5 @@ export interface KavappInventoryResponse {
     product: KavappInventoryItem[];
     kitchen: KavappInventoryItem[];
 }
+
+export type KavappCatalogResponse = KavappCatalogItem[];

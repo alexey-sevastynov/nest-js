@@ -13,14 +13,20 @@ import { User } from "../../user/user-schema";
 import { userRoleKeys } from "../../user/enums/user-role-key";
 import { userStatusKeys } from "../../user/enums/user-status-key";
 
+const jwtExtractor = ExtractJwt as unknown as {
+    fromAuthHeaderAsBearerToken: () => (request: unknown) => string | null;
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
         configService: ConfigService,
         @InjectModel(User.name) private readonly userModel: Model<User>,
     ) {
+        // PassportStrategy's constructor type is not exposed by the installed passport typings.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: jwtExtractor.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
             secretOrKey: getRequiredEnv(envKeys.jwtSecret, configService),
         });

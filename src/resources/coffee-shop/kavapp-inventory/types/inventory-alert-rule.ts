@@ -1,6 +1,12 @@
-export interface InventoryAlertRule {
+import type { KavappInventoryItemType } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-item";
+
+export type { KavappInventoryItemType };
+
+export interface InventoryAlertRuleData {
+    itemType: KavappInventoryItemType;
+    kavappItemId: string;
     name: string;
-    threshold: number;
     unit: string;
-    message?: string;
+    threshold: number;
+    description?: string;
 }

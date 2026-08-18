@@ -2,6 +2,12 @@ import type { Request, Response } from "express";
 import type express from "express";
 import { bootstrap } from "./bootstrap";
 
+import * as dns from "node:dns";
+
+// Явно задаем DNS-серверы для Node.js процесса
+dns.setDefaultResultOrder("ipv4first");
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
+
 const serverPromise = bootstrap();
 
 /**

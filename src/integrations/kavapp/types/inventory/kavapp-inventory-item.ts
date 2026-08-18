@@ -14,3 +14,15 @@ export interface KavappInventoryItem {
     salePrice?: number;
     saleCost?: number;
 }
+
+export type KavappInventoryItemType = "ingredient" | "cup" | "product" | "kitchen";
+
+export interface KavappCatalogItem {
+    id: string;
+    name: string;
+    units?: string;
+    unitsName?: string;
+    volumeUnits?: string;
+    volumeUnitsName?: string;
+    type: Exclude<KavappInventoryItemType, "kitchen">;
+}

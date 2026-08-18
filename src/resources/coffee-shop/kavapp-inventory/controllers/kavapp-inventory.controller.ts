@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Query, ParseIntPipe, DefaultValuePipe } from "@nestjs/common";
-import { Roles } from "../../../common/auth/decorators/roles.decorator";
-import { authorizedRoles } from "../../../common/auth/constants/authorized-roles";
-import { KavappInventoryResponse } from "../../../integrations/kavapp/types/inventory/kavapp-inventory-response";
-import { KavappInventoryService } from "./services/kavapp-inventory.service";
-import { KavappSyncService } from "./services/kavapp-sync.service";
+import { Roles } from "../../../../common/auth/decorators/roles.decorator";
+import { authorizedRoles } from "../../../../common/auth/constants/authorized-roles";
+import { KavappInventoryResponse } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-response";
+import { KavappInventoryService } from "../services/kavapp-inventory.service";
+import { KavappSyncService } from "../services/kavapp-sync.service";
+import { KavappCatalogItem } from "../../../../integrations/kavapp/types/inventory/kavapp-inventory-item";
 
 @Roles(...authorizedRoles.coffeeShop)
 @Controller("coffee-shop/kavapp")
@@ -16,6 +17,11 @@ export class KavappInventoryController {
     @Get("inventory")
     async getInventory(@Query("pointId") pointId?: string): Promise<KavappInventoryResponse> {
         return this.kavappInventoryService.getCurrentInventory(pointId);
+    }
+
+    @Get("catalog")
+    async getCatalog(): Promise<KavappCatalogItem[]> {
+        return this.kavappInventoryService.getCatalog();
     }
 
     @Post("sync")
